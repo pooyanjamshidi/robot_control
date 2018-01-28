@@ -11,6 +11,11 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslib
   rospy
+  gazebo_msgs
+  gazebo_plugins
+  gazebo_ros
+  gazebo_ros_control
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
