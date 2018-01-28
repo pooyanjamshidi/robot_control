@@ -61,6 +61,7 @@
   <exec_depend>roslib</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>gazebo_msgs</exec_depend>
+  <exec_depend>brass_gazebo_battery</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

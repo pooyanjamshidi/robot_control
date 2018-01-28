@@ -1,5 +1,6 @@
 import rospy
 from gazebo_msgs.srv import *
+from brass_gazebo_battery.srv import *
 from tf.transformations import euler_from_quaternion
 import math
 
@@ -10,6 +11,11 @@ class ControlInterface:
     def __init__(self):
 
         self.get_model_state = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
+
+        self.set_charging_srv = rospy.ServiceProxy('/mobile_base/set_charging', SetCharging)
+        self.set_charge_srv = rospy.ServiceProxy('/mobile_base/set_charge', SetCharge)
+        self.set_powerload_srv = rospy.ServiceProxy('/mobile_base/set_power_load', SetLoad)
+
 
 
 
@@ -26,9 +32,19 @@ class ControlInterface:
             rospy.logerr("Error happened while getting bot position: %s", se)
             return None, None, None, None
 
+    def set_charging(self, charging):
+        return self.set_charging_srv(charging)
+
+    def set_charge(self, charge):
+        return self.set_charging_srv(charge)
+
+    def set_power_load(self, load):
+        return  self.set_powerload_srv(load)
+
+
 def main():
     ci = ControlInterface()
-    state = ci.get_model_state()
+    state = ci.get_bot_state()
     print(state)
 
 
