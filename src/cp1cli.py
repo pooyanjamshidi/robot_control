@@ -1,8 +1,12 @@
 import rospy
 from gazebo_msgs.srv import *
+
+# importing battery services
 from brass_gazebo_battery.srv import *
+
 from tf.transformations import euler_from_quaternion
 import math
+
 
 # Here we manage the world, bot, and control interface
 
@@ -15,8 +19,6 @@ class ControlInterface:
         self.set_charging_srv = rospy.ServiceProxy('/mobile_base/set_charging', SetCharging)
         self.set_charge_srv = rospy.ServiceProxy('/mobile_base/set_charge', SetCharge)
         self.set_powerload_srv = rospy.ServiceProxy('/mobile_base/set_power_load', SetLoad)
-
-
 
 
     def get_bot_state(self):
