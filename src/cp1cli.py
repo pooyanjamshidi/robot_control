@@ -9,6 +9,9 @@ from tf.transformations import euler_from_quaternion
 import math
 
 
+ros_node = '/battery_monitor_client'
+model_name = '/battery_demo_model'
+
 # Here we manage the world, bot, and control interface
 
 class ControlInterface:
@@ -17,13 +20,12 @@ class ControlInterface:
 
         self.get_model_state = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
 
-        self.set_charging_srv = rospy.ServiceProxy('/mobile_base/set_charging', SetCharging)
-        self.set_charge_srv = rospy.ServiceProxy('/mobile_base/set_charge', SetCharge)
-        self.set_powerload_srv = rospy.ServiceProxy('/mobile_base/set_power_load', SetLoad)
-
+        self.set_charging_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charging', SetCharging)
+        self.set_charge_rate_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charge_rate', SetChargingRate)
+        self.set_charge_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charge', SetCharge)
+        self.set_powerload_srv = rospy.ServiceProxy(ros_node + model_name + '/set_power_load', SetLoad)
 
         self.battery_charge = -1
-
 
     def get_bot_state(self):
 
@@ -42,10 +44,13 @@ class ControlInterface:
         return self.set_charging_srv(charging)
 
     def set_charge(self, charge):
-        return self.set_charging_srv(charge)
+        return self.set_charge_srv(charge)
 
     def set_power_load(self, load):
-        return  self.set_powerload_srv(load)
+        return self.set_powerload_srv(load)
+
+    def set_charging_rate(self, charge_rate):
+        return self.set_charge_rate_srv(charge_rate)
 
 
 def get_charge(msg):
@@ -68,6 +73,10 @@ def main():
     ci = ControlInterface()
     state = ci.get_bot_state()
     print("Bot is located at ({0}, {1}), facing {2} and going with a speed of {3} m/s".format(state[0], state[1], state[2], state[3]))
+
+    # ci.set_power_load(1)
+    ci.set_charge(3)
+    ci.set_charging(0)
 
     monitor_battery()
 
