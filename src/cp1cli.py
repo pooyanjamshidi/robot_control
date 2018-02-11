@@ -1,20 +1,21 @@
+import traceback
 import rospy
-from gazebo_msgs.srv import *
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from std_msgs.msg import Float64
-
 from actionlib_msgs.msg import *
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import *
+from gazebo_msgs.msg import *
+from gazebo_msgs.srv import *
 import actionlib
 import dynamic_reconfigure.client
-import sys
-import ast
+import tf
 
 
 # importing battery services
 from brass_gazebo_battery.srv import *
 
-from tf.transformations import euler_from_quaternion
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import math
 
 
@@ -30,12 +31,15 @@ class ControlInterface:
     def __init__(self):
 
         self.get_model_state = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
+        self.set_model_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
 
         # Gazebo services
         self.set_charging_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charging', SetCharging)
         self.set_charge_rate_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charge_rate', SetChargingRate)
         self.set_charge_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charge', SetCharge)
         self.set_powerload_srv = rospy.ServiceProxy(ros_node + model_name + '/set_power_load', SetLoad)
+
+        self.amcl = rospy.Publisher('initialpose', PoseWithCovarianceStamped, queue_size=10, latch=True)
 
         self.battery_charge = -1
 
@@ -62,18 +66,59 @@ class ControlInterface:
 
         state = ac.get_state()
 
-        if success and state == GoalStatus.SUCCEEDED
+        if success and state == GoalStatus.SUCCEEDED:
             rospy.loginfo("reached the destination")
             return True
         else:
             rospy.loginfo("could not reached the destination")
             return False
 
-
-
-
     def set_bot_position(self, x, y, w):
-        pass
+
+        try:
+            tp = self.get_model_state('mobile_base', '')
+
+            tp.pose.position.x = x
+            tp.pose.position.y = y
+            quat = (tp.pose.orientation.x, tp.pose.orientation.y, tp.pose.orientation.z, tp.pose.orientation.w)
+            (roll, pitch, yaw) = euler_from_quaternion(quat)
+            yaw = w
+            quat = quaternion_from_euler(roll, pitch, yaw)
+
+            tp.pose.orientation.x = quat[0]
+            tp.pose.orientation.y = quat[1]
+            tp.pose.orientation.z = quat[2]
+            tp.pose.orientation.w = quat[3]
+
+            ms = ModelState()
+            ms.model_name = "mobile_base"
+            ms.pose = tp.pose
+            ms.twist = tp.twist
+
+            result = self.set_model_state(ms)
+
+            if result.success:
+                ip = PoseWithCovarianceStamped()
+                ip.header.stamp = rospy.Time.now()
+                ip.header.frame_id = map_name
+                ip.pose.pose.position.x = x
+                ip.pose.pose.position.y = y
+                ip.pose.pose.position.z = 0
+                ip.pose.pose.orientation.x = tp.pose.orientation.x
+                ip.pose.pose.orientation.y = tp.pose.orientation.y
+                ip.pose.pose.orientation.z = tp.pose.orientation.z
+                ip.pose.pose.orientation.w = tp.pose.orientation.w
+                self.amcl.publish(ip)
+                rospy.loginfo("The bot is positioned in the new place at ({0}, {1})".format(x, y))
+                return True
+            else:
+                rospy.logerr("Error occurred putting the bot in the position")
+                return False
+
+        except rospy.ServiceException as e:
+            rospy.logerr("Could not set the position of the bot")
+            rospy.logerr(e.message)
+
 
     def get_bot_state(self):
 
@@ -125,11 +170,12 @@ def main():
     print("Bot is located at ({0}, {1}), facing {2} and going with a speed of {3} m/s".format(state[0], state[1], state[2], state[3]))
 
     # ci.set_power_load(1)
-    # ci.set_charge(3)
+    ci.set_charge(1)
     ci.set_charging(1)
 
     # monitor_battery()
-    ci.move_to_point(1, 1)
+    # ci.move_to_point(0, -1)
+    ci.set_bot_position(0, 0, 0)
 
 
 if __name__ == '__main__':
