@@ -1,4 +1,7 @@
 import traceback
+import math
+
+# third party imports
 import rospy
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from std_msgs.msg import Float64
@@ -10,19 +13,21 @@ from gazebo_msgs.srv import *
 import actionlib
 import dynamic_reconfigure.client
 import tf
-
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
+import ig_action_msgs.msg
+from ig_action_msgs.msg import InstructionGraphResult
+from mars_notifications.msg import UserNotification
+from kobuki_msgs.msg import MotorPower
 
 # importing battery services
 from brass_gazebo_battery.srv import *
 
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
-import math
-
-
+# parameters and global variables
 ros_node = '/battery_monitor_client'
 model_name = '/battery_demo_model'
 map_name = 'map'
 max_waiting_time = 100
+
 
 # Here we manage the world, bot, and control interface
 
@@ -43,10 +48,12 @@ class ControlInterface:
 
         self.battery_charge = -1
 
-    def move_to_point(self, x, y):
-        ac = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+        self.movebase_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+        self.ig_client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
 
-        while not ac.wait_for_server(rospy.Duration.from_sec(5)):
+    def move_to_point(self, x, y):
+
+        while not self.movebase_client.wait_for_server(rospy.Duration.from_sec(5)):
             rospy.loginfo("waiting for the action server")
 
         goal = MoveBaseGoal()
@@ -61,10 +68,10 @@ class ControlInterface:
         goal.target_pose.pose.orientation.z = 0.0
         goal.target_pose.pose.orientation.w = 1.0
 
-        ac.send_goal(goal)
-        success = ac.wait_for_result(rospy.Duration.from_sec(max_waiting_time))
+        self.movebase_client.send_goal(goal)
+        success = self.movebase_client.wait_for_result(rospy.Duration.from_sec(max_waiting_time))
 
-        state = ac.get_state()
+        state = self.movebase_client.get_state()
 
         if success and state == GoalStatus.SUCCEEDED:
             rospy.loginfo("reached the destination")
@@ -72,6 +79,33 @@ class ControlInterface:
         else:
             rospy.loginfo("could not reached the destination")
             return False
+
+    def connect_to_ig_action_server(self):
+
+        rospy.loginfo("connecting to the ig_action_server ...")
+        success = self.ig_client.wait_for_server(rospy.Duration.from_sec(max_waiting_time))
+        if success:
+            rospy.loginfo("connected to 'ig_action_server'")
+            return True
+        else:
+            rospy.loginfo("could not connect to 'ig_action_server'")
+            return False
+
+    def move_bot_with_ig(self, ig_file):
+
+        with open(ig_file) as igfile:
+            igcode = igfile.read()
+            goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
+            self.ig_client.send_goal(goal=goal)
+            success = self.ig_client.wait_for_result(rospy.Duration.from_sec(max_waiting_time))
+
+            state = self.ig_client.get_state()
+            if success and state == GoalStatus.SUCCEEDED:
+                rospy.loginfo("reached the destination")
+                return True
+            else:
+                rospy.loginfo("could not reached the destination")
+                return False
 
     def set_bot_position(self, x, y, w):
 
@@ -119,7 +153,6 @@ class ControlInterface:
             rospy.logerr("Could not set the position of the bot")
             rospy.logerr(e.message)
 
-
     def get_bot_state(self):
 
         try:
@@ -158,12 +191,17 @@ def monitor_battery():
     rospy.spin()
 
 
+
+def execute_action
+
 def main():
 
     global battery_charge
     battery_charge = -1
 
     rospy.init_node('navigation', anonymous=False)
+
+
 
     ci = ControlInterface()
     state = ci.get_bot_state()
