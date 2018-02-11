@@ -2,6 +2,15 @@ import rospy
 from gazebo_msgs.srv import *
 from std_msgs.msg import Float64
 
+from actionlib_msgs.msg import *
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from geometry_msgs.msg import Point
+import actionlib
+import dynamic_reconfigure.client
+import sys
+import ast
+
+
 # importing battery services
 from brass_gazebo_battery.srv import *
 
@@ -11,6 +20,8 @@ import math
 
 ros_node = '/battery_monitor_client'
 model_name = '/battery_demo_model'
+map_name = 'map'
+max_waiting_time = 100
 
 # Here we manage the world, bot, and control interface
 
@@ -20,12 +31,49 @@ class ControlInterface:
 
         self.get_model_state = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
 
+        # Gazebo services
         self.set_charging_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charging', SetCharging)
         self.set_charge_rate_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charge_rate', SetChargingRate)
         self.set_charge_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charge', SetCharge)
         self.set_powerload_srv = rospy.ServiceProxy(ros_node + model_name + '/set_power_load', SetLoad)
 
         self.battery_charge = -1
+
+    def move_to_point(self, x, y):
+        ac = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+
+        while not ac.wait_for_server(rospy.Duration.from_sec(5)):
+            rospy.loginfo("waiting for the action server")
+
+        goal = MoveBaseGoal()
+
+        goal.target_pose.header.frame_id = map_name
+        goal.target_pose.header.stamp = rospy.Time.now()
+
+        goal.target_pose.pose.position = Point(x, y, 0)
+
+        goal.target_pose.pose.orientation.x = 0.0
+        goal.target_pose.pose.orientation.y = 0.0
+        goal.target_pose.pose.orientation.z = 0.0
+        goal.target_pose.pose.orientation.w = 1.0
+
+        ac.send_goal(goal)
+        success = ac.wait_for_result(rospy.Duration.from_sec(max_waiting_time))
+
+        state = ac.get_state()
+
+        if success and state == GoalStatus.SUCCEEDED
+            rospy.loginfo("reached the destination")
+            return True
+        else:
+            rospy.loginfo("could not reached the destination")
+            return False
+
+
+
+
+    def set_bot_position(self, x, y, w):
+        pass
 
     def get_bot_state(self):
 
@@ -70,15 +118,18 @@ def main():
     global battery_charge
     battery_charge = -1
 
+    rospy.init_node('navigation', anonymous=False)
+
     ci = ControlInterface()
     state = ci.get_bot_state()
     print("Bot is located at ({0}, {1}), facing {2} and going with a speed of {3} m/s".format(state[0], state[1], state[2], state[3]))
 
     # ci.set_power_load(1)
-    ci.set_charge(3)
-    ci.set_charging(0)
+    # ci.set_charge(3)
+    ci.set_charging(1)
 
-    monitor_battery()
+    # monitor_battery()
+    ci.move_to_point(1, 1)
 
 
 if __name__ == '__main__':
