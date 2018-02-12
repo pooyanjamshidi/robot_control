@@ -35,26 +35,35 @@ class ControlInterface:
 
     def __init__(self):
 
+        # standard Gazebo services
         self.get_model_state = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
         self.set_model_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
 
-        # Gazebo services
+        # Battery plugin Gazebo services
         self.set_charging_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charging', SetCharging)
         self.set_charge_rate_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charge_rate', SetChargingRate)
         self.set_charge_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charge', SetCharge)
         self.set_powerload_srv = rospy.ServiceProxy(ros_node + model_name + '/set_power_load', SetLoad)
 
+        # AMCL topic
         self.amcl = rospy.Publisher('initialpose', PoseWithCovarianceStamped, queue_size=10, latch=True)
 
         self.battery_charge = -1
 
-        self.movebase_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
-        self.ig_client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
+        self.movebase_client = None
+        self.ig_client = None
 
-    def move_to_point(self, x, y):
+    def connect_to_navigation_server(self):
+
+        self.movebase_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
 
         while not self.movebase_client.wait_for_server(rospy.Duration.from_sec(5)):
             rospy.loginfo("waiting for the action server")
+
+        rospy.loginfo("successfully connected to the action server")
+        return True
+
+    def move_to_point(self, x, y):
 
         goal = MoveBaseGoal()
 
@@ -82,14 +91,13 @@ class ControlInterface:
 
     def connect_to_ig_action_server(self):
 
-        rospy.loginfo("connecting to the ig_action_server ...")
-        success = self.ig_client.wait_for_server(rospy.Duration.from_sec(max_waiting_time))
-        if success:
-            rospy.loginfo("connected to 'ig_action_server'")
-            return True
-        else:
-            rospy.loginfo("could not connect to 'ig_action_server'")
-            return False
+        self.ig_client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
+
+        while not self.ig_client.wait_for_server(rospy.Duration.from_sec(max_waiting_time)):
+            rospy.loginfo("waiting for the 'ig_action_server'")
+
+        rospy.loginfo("successfully connected to the 'ig_action_server'")
+        return True
 
     def move_bot_with_ig(self, ig_file):
 
@@ -101,10 +109,10 @@ class ControlInterface:
 
             state = self.ig_client.get_state()
             if success and state == GoalStatus.SUCCEEDED:
-                rospy.loginfo("reached the destination")
+                rospy.loginfo("Successfully executed the instructions and reached the destination")
                 return True
             else:
-                rospy.loginfo("could not reached the destination")
+                rospy.loginfo("could not execute the instructions")
                 return False
 
     def set_bot_position(self, x, y, w):
@@ -191,17 +199,12 @@ def monitor_battery():
     rospy.spin()
 
 
-
-def execute_action
-
 def main():
 
     global battery_charge
     battery_charge = -1
 
     rospy.init_node('navigation', anonymous=False)
-
-
 
     ci = ControlInterface()
     state = ci.get_bot_state()
@@ -213,7 +216,10 @@ def main():
 
     # monitor_battery()
     # ci.move_to_point(0, -1)
-    ci.set_bot_position(0, 0, 0)
+    # ci.set_bot_position(0, 0, 0)
+
+    ci.connect_to_ig_action_server()
+    ci.move_bot_with_ig('../instructions/nav_test1.ig')
 
 
 if __name__ == '__main__':
