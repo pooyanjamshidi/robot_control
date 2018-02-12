@@ -1,9 +1,9 @@
 import traceback
 import math
+import json
 
 # third party imports
 import rospy
-from geometry_msgs.msg import PoseWithCovarianceStamped
 from std_msgs.msg import Float64
 from actionlib_msgs.msg import *
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
@@ -27,6 +27,11 @@ ros_node = '/battery_monitor_client'
 model_name = '/battery_demo_model'
 map_name = 'map'
 max_waiting_time = 100
+
+# the threshold below which the bot will go to the charging station
+battery_low_threshold = 0.2
+
+conf_file = '../conf/conf.json'
 
 
 # Here we manage the world, bot, and control interface
@@ -52,6 +57,21 @@ class ControlInterface:
 
         self.movebase_client = None
         self.ig_client = None
+
+        self.bot_conf = None
+
+    def read_conf(self):
+
+        with open(conf_file) as json_file:
+            self.bot_conf = json.load(json_file)
+
+    def update_conf(self, conf):
+
+        with open(conf_file, 'w') as json_file:
+            json.dump(conf, json_file)
+
+        # update the bot configuration
+        self.bot_conf = conf
 
     def connect_to_navigation_server(self):
 
@@ -94,9 +114,9 @@ class ControlInterface:
         self.ig_client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
 
         while not self.ig_client.wait_for_server(rospy.Duration.from_sec(max_waiting_time)):
-            rospy.loginfo("waiting for the 'ig_action_server'")
+            rospy.loginfo("waiting for the ig_action_server")
 
-        rospy.loginfo("successfully connected to the 'ig_action_server'")
+        rospy.loginfo("successfully connected to the ig_action_server")
         return True
 
     def move_bot_with_ig(self, ig_file):
@@ -217,6 +237,8 @@ def main():
     # monitor_battery()
     # ci.move_to_point(0, -1)
     # ci.set_bot_position(0, 0, 0)
+
+    ci.read_conf()
 
     ci.connect_to_ig_action_server()
     ci.move_bot_with_ig('../instructions/nav_test1.ig')

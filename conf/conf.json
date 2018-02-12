@@ -1,0 +1,22 @@
+{
+  "localization": 1,
+  "kinect": 1,
+  "thermometer": 1,
+  "barometer": 1,
+  "gps": 1,
+  "laser": 1,
+  "camera": 1,
+  "bumpers": 1,
+  "cliff": 1,
+  "proximity": 1,
+  "sound": 1,
+  "light": 1,
+  "magnetic": 1,
+  "radio": 1,
+  "altitude": 1,
+  "speaker": 1,
+  "voltmeter": 1,
+  "lidar": 1,
+  "carbon-monoxide": 1,
+  "carbon-dioxide": 1
+}
