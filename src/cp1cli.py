@@ -1,6 +1,8 @@
 import traceback
 import math
 import json
+import numpy
+
 
 # third party imports
 import rospy
@@ -33,8 +35,11 @@ battery_low_threshold = 0.2
 
 conf_file = '../conf/conf.json'
 
+default_configuration_id = 0
+default_power_load = 10
 
 # Here we manage the world, bot, and control interface
+
 
 class ControlInterface:
 
