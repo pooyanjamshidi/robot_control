@@ -43,6 +43,8 @@ class BotController:
         :param target: target waypoint id
         :return:
         """
+
+        # get the yaw (direction) where the robot is headed
         w = self.instruction_server.get_start_heading(start, target)
         if w == -1:
             print("No information for %s to %s".format(start, target))
@@ -57,4 +59,28 @@ class BotController:
 
         # get the instruction code and execute it
         igcode = self.instruction_server.get_instructions(start, target)
-        self.gazebo.move_bot_with_igcode(igcode)
+        res = self.gazebo.move_bot_with_igcode(igcode)
+
+        return res
+
+    def go_instructions_multiple_tasks(self, start, targets):
+        """the same version of go_insructions but for multiple tasks for cp1
+
+        :param start:
+        :param targets:
+        :return:
+        """
+        number_of_tasks_accomplished = 0
+
+        for target in targets:
+            current_start = start
+            success = self.go_instructions(current_start, target)
+            start = target
+            if success:
+                number_of_tasks_accomplished += 1
+
+        return number_of_tasks_accomplished
+
+
+    def go_charging(self):
+        pass
