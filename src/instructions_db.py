@@ -35,5 +35,5 @@ class InstructionDB:
     def get_start_heading(self, wp_src, wp_tgt):
         key = self.__form_key(wp_src, wp_tgt)
         if key not in self.db:
-            return 0
+            return -1
         return self.db[key]["start-dir"]

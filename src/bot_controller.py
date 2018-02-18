@@ -37,7 +37,24 @@ class BotController:
         return res
 
     def go_instructions(self, start, target):
-        pass
+        """bot execute the instructions and goes from start to the target with the directions instructed by the igcode
 
-    def exec_instructions(self, start, target):
-        pass
+        :param start: start waypoint id
+        :param target: target waypoint id
+        :return:
+        """
+        w = self.instruction_server.get_start_heading(start, target)
+        if w == -1:
+            print("No information for %s to %s".format(start, target))
+            return False
+
+        if self.gazebo.ig_client is None:
+            self.gazebo.connect_to_ig_action_server()
+
+        # get the x, y coordinates from the map server and put the robot there using the gazebo interface
+        start_coords = self.map_server.waypoint_to_coords(start)
+        self.gazebo.set_bot_position(start_coords['x'], start_coords['y'], w)
+
+        # get the instruction code and execute it
+        igcode = self.instruction_server.get_instructions(start, target)
+        self.gazebo.move_bot_with_igcode(igcode)

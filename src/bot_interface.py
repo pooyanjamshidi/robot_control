@@ -140,6 +140,20 @@ class ControlInterface:
                 rospy.loginfo("could not execute the instructions")
                 return False
 
+    def move_bot_with_igcode(self, igcode):
+
+        goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
+        self.ig_client.send_goal(goal=goal)
+        success = self.ig_client.wait_for_result(rospy.Duration.from_sec(max_waiting_time))
+
+        state = self.ig_client.get_state()
+        if success and state == GoalStatus.SUCCEEDED:
+            rospy.loginfo("Successfully executed the instructions and reached the destination")
+            return True
+        else:
+            rospy.loginfo("could not execute the instructions")
+            return False
+
     def set_bot_position(self, x, y, w):
 
         try:
