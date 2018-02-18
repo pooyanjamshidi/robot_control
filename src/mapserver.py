@@ -32,6 +32,15 @@ class MapServer:
             raise ValueError('non-unique waypoint identifiers in the map file')
         return len(waypoint_list) == 1
 
+    def is_charging_station(self, waypoint_id):
+        if waypoint_id in self.stations:
+            return True
+        else:
+            return False
+
+    def get_charging_station(self):
+        return self.stations
+
     def get_waypoint(self, waypoint_id):
         return filter(lambda waypoint: waypoint["node-id"] == waypoint_id, self.waypoint_list)
 

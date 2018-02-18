@@ -81,6 +81,11 @@ class BotController:
 
         return number_of_tasks_accomplished
 
-
-    def go_charging(self):
-        pass
+    def go_charging(self, loc):
+        """bot goes to the closests charging station from the current waypoint it is on"""
+        path_to_charging = self.map_server.closest_charging_station(loc)
+        charging = path_to_charging[-1]
+        res = self.go_without_instructions(loc, charging)
+        if res:
+            self.gazebo.set_charging(1)
+        return res
