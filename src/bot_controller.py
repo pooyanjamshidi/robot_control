@@ -87,5 +87,21 @@ class BotController:
         charging = path_to_charging[-1]
         res = self.go_without_instructions(loc, charging)
         if res:
-            self.gazebo.set_charging(1)
+            self.dock()
         return res
+
+    def dock(self):
+        if self.gazebo.is_charging:
+            print("the bot is currently docked")
+            return False
+        else:
+            self.gazebo.set_charging(1)
+            return True
+
+    def undock(self):
+        if self.gazebo.is_charging:
+            self.gazebo.set_charging(0)
+            return True
+        else:
+            print("the bot is not docked")
+            return False

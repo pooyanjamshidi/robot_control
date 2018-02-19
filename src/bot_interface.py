@@ -59,6 +59,8 @@ class ControlInterface:
         self.amcl = rospy.Publisher('initialpose', PoseWithCovarianceStamped, queue_size=10, latch=True)
 
         self.battery_charge = -1
+        self.battery_capacity = 1.2009
+        self.is_charging = False
 
         self.movebase_client = None
         self.ig_client = None
@@ -214,6 +216,7 @@ class ControlInterface:
             return None, None, None, None
 
     def set_charging(self, charging):
+        self.is_charging = charging
         return self.set_charging_srv(charging)
 
     def set_charge(self, charge):
@@ -225,17 +228,19 @@ class ControlInterface:
     def set_charging_rate(self, charge_rate):
         return self.set_charge_rate_srv(charge_rate)
 
+    def get_charge(self, msg):
+        # global battery_charge
+        self.battery_charge = msg.data
+        # print(battery_charge)
 
-def get_charge(msg):
-    global battery_charge
-    battery_charge = msg.data
-    print(battery_charge)
+    def monitor_battery(self):
+        rospy.init_node("battery_monitor_client")
+        rospy.Subscriber("/mobile_base/commands/charge_level", Float64, self.get_charge)
+        rospy.spin()
 
-
-def monitor_battery():
-    rospy.init_node("battery_monitor_client")
-    rospy.Subscriber("/mobile_base/commands/charge_level", Float64, get_charge)
-    rospy.spin()
+    def get_battery_charge(self):
+        rospy.init_node("battery_monitor_client")
+        rospy.Subscriber("/mobile_base/commands/charge_level", Float64, self.get_charge)
 
 
 def main():
