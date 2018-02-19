@@ -145,16 +145,19 @@ class ControlInterface:
     def move_bot_with_igcode(self, igcode):
 
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
-        self.ig_client.send_goal(goal=goal)
+        self.ig_client.send_goal(goal=goal, done_cb=self.done_cb, active_cb=self.active_cb, feedback_cb=self.feedback_cb)
         success = self.ig_client.wait_for_result(rospy.Duration.from_sec(max_waiting_time))
 
         state = self.ig_client.get_state()
         if success and state == GoalStatus.SUCCEEDED:
             rospy.loginfo("Successfully executed the instructions and reached the destination")
-            return True
+            return True, False
+        elif state == GoalStatus.PREEMPTED:
+            # the second part is used to determine whether should go to charging
+            return False, True
         else:
             rospy.loginfo("could not execute the instructions")
-            return False
+            return False, False
 
     def set_bot_position(self, x, y, w):
 
@@ -241,6 +244,18 @@ class ControlInterface:
     def get_battery_charge(self):
         rospy.init_node("battery_monitor_client")
         rospy.Subscriber("/mobile_base/commands/charge_level", Float64, self.get_charge)
+
+    def active_cb(self):
+        pass
+
+    def done_cb(self, status, result):
+        pass
+
+    def feedback_cb(self, feedback):
+        # first get the latest charge and then determine whether the bot should abort the task
+        self.get_battery_charge()
+        if self.battery_charge < battery_low_threshold * self.battery_capacity:
+            self.ig_client.cancel_goal()
 
 
 def main():

@@ -1,12 +1,13 @@
 """bot controller"""
 import os
+import time
 from mapserver import MapServer
 from instructions_db import InstructionDB
 from bot_interface import ControlInterface
 
 map_file = os.path.expanduser("~/catkin_ws/src/cp1_base/maps/cp1_map.json")
 instructions_db_file = os.path.expanduser("~/catkin_ws/src/cp1_base/instructions/instructions-all.json")
-
+sleep_interval = 5
 
 class BotController:
 
@@ -59,12 +60,12 @@ class BotController:
 
         # get the instruction code and execute it
         igcode = self.instruction_server.get_instructions(start, target)
-        res = self.gazebo.move_bot_with_igcode(igcode)
+        res, low_charge = self.gazebo.move_bot_with_igcode(igcode)
 
-        return res
+        return res, low_charge
 
     def go_instructions_multiple_tasks(self, start, targets):
-        """the same version of go_insructions but for multiple tasks for cp1
+        """the same version of go_instructions but for multiple tasks for cp1
 
         :param start:
         :param targets:
@@ -74,21 +75,38 @@ class BotController:
 
         for target in targets:
             current_start = start
-            success = self.go_instructions(current_start, target)
-            start = target
+            success, low_charge = self.go_instructions(current_start, target)
+
             if success:
+                start = target
                 number_of_tasks_accomplished += 1
+
+            if low_charge:
+                bot_state = self.gazebo.get_bot_state()
+                loc = {"x": bot_state[0], "y": bot_state[1]}
+                res, charging_id = self.go_charging(loc)
+                while not self.is_fully_charged():
+                    time.sleep(sleep_interval)
+                self.undock()
+                start = charging_id
 
         return number_of_tasks_accomplished
 
     def go_charging(self, loc):
-        """bot goes to the closests charging station from the current waypoint it is on"""
+        """bot goes to the closest charging station from the current waypoint it is on"""
         path_to_charging = self.map_server.closest_charging_station(loc)
-        charging = path_to_charging[-1]
-        res = self.go_without_instructions(loc, charging)
+        charging_id = path_to_charging[-1]
+        res = self.go_without_instructions(loc, charging_id)
         if res:
             self.dock()
-        return res
+        return res, charging_id
+
+    def is_fully_charged(self):
+        self.gazebo.get_battery_charge()
+        if self.gazebo.battery_charge == self.gazebo.battery_capacity:
+            return True
+        else:
+            return False
 
     def dock(self):
         if self.gazebo.is_charging:
