@@ -90,10 +90,10 @@ class MapServer:
         :return:
         """
         shortest_path = []
-        for i in range(len(self.stations)):
-            paths = self.dfs_paths(waypoint_id, self.stations[i])
-            for j in range(len(paths)):
-                if len(shortest_path) > 0 and len(paths[j]) < len(shortest_path):
-                    shortest_path = paths[j]
+        for station in self.stations:
+            paths = self.dfs_paths(waypoint_id, station)
+            for path in paths:
+                if len(shortest_path) > 0 and len(path) < len(shortest_path):
+                    shortest_path = path
 
         return shortest_path

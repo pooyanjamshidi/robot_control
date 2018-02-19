@@ -9,6 +9,7 @@ map_file = os.path.expanduser("~/catkin_ws/src/cp1_base/maps/cp1_map.json")
 instructions_db_file = os.path.expanduser("~/catkin_ws/src/cp1_base/instructions/instructions-all.json")
 sleep_interval = 5
 
+
 class BotController:
 
     def __init__(self):
