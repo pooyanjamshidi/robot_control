@@ -124,3 +124,19 @@ class BotController:
         else:
             print("the bot is not docked")
             return False
+
+    def predict_mission_time(self, start, targets):
+        """predict mission time in baseline A and B, a mission is comprised on several tasks
+
+        :return:
+        """
+        mission_time = 0
+        for target in targets:
+            current_start = start
+            mission_time += self.instruction_server.get_predicted_duration(current_start, target)
+            start = target
+
+        return mission_time
+    
+
+
