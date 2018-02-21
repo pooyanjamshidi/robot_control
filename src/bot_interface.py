@@ -54,7 +54,9 @@ class ControlInterface:
         # standard Gazebo services
         self.get_model_state = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
         self.set_model_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+
         self.spawn_model = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
+        self.delete_model = rospy.ServiceProxy('/gazebo/delete_model', DeleteModel)
 
         # Battery plugin Gazebo services
         self.set_charging_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charging', SetCharging)
@@ -94,7 +96,7 @@ class ControlInterface:
         pose.orientation.w = zero_q[3]
 
         with self.lock:
-            obstacle_name = 'Obstacle_%s'.format(self.obstacle_seq)
+            obstacle_name = 'Obstacle_{0}'.format(self.obstacle_seq)
 
         req = SpawnModelRequest()
         req.model_name = obstacle_name
@@ -109,10 +111,34 @@ class ControlInterface:
                     self.obstacles.append(obstacle_name)
                 return obstacle_name
             else:
-                rospy.logerr("Could not place obstacle. Message: %s".format(res.status_message))
+                rospy.logerr("Could not place obstacle. Message: {0}".format(res.status_message))
                 return None
         except rospy.ServiceException as e:
-            rospy.logerr("Could not place obstacle. Message %s".format(e))
+            rospy.logerr("Could not place obstacle. Message {0}".format(e))
+            return None
+
+    def remove_obstacle(self, obstacle_name):
+
+        with self.lock:
+            if obstacle_name not in self.obstacles:
+                rospy.logerr('The obstacle could not find in the world: {0}'.format(obstacle_name))
+                return False
+
+        req = DeleteModelRequest()
+        req.model_name = obstacle_name
+        try:
+            res = self.delete_model(req)
+
+            if res.success:
+                with self.lock:
+                    self.obstacles.remove(obstacle_name)
+
+                return True
+            else:
+                rospy.logerr("Could not remove obstacle. Message: {0}".format(res.status_message))
+                return None
+        except rospy.ServiceException as e:
+            rospy.logerr("Could not place obstacle. Message {0}".format(e))
             return None
 
     def read_conf(self):
