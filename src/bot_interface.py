@@ -2,7 +2,8 @@ import traceback
 import math
 import json
 import numpy
-
+from threading import Lock
+import os
 
 # third party imports
 import rospy
@@ -38,6 +39,11 @@ conf_file = '../conf/conf.json'
 default_configuration_id = 0
 default_power_load = 10
 
+
+# This is the model for the obstacle
+obstacle = os.path.expanduser('~/catkin_ws/src/cp1_base/models/box')
+
+
 # Here we manage the world, bot, and control interface
 
 
@@ -48,6 +54,7 @@ class ControlInterface:
         # standard Gazebo services
         self.get_model_state = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
         self.set_model_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
+        self.spawn_model = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
 
         # Battery plugin Gazebo services
         self.set_charging_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charging', SetCharging)
@@ -66,6 +73,47 @@ class ControlInterface:
         self.ig_client = None
 
         self.bot_conf = None
+
+        obstacle_xml_file = open(obstacle + '.sdf')
+        self.obs_xml = obstacle_xml_file.read()
+
+        self.obstacles = []
+        self.obstacle_seq = 0
+        self.lock = Lock()
+
+    def place_obstacle(self, x, y):
+
+        pose = Pose()
+        zero_q = quaternion_from_euler(0, 0, 0)
+        pose.position.x = x
+        pose.position.y = y
+        pose.position.z = 0
+        pose.orientation.x = zero_q[0]
+        pose.orientation.y = zero_q[1]
+        pose.orientation.z = zero_q[2]
+        pose.orientation.w = zero_q[3]
+
+        with self.lock:
+            obstacle_name = 'Obstacle_%s'.format(self.obstacle_seq)
+
+        req = SpawnModelRequest()
+        req.model_name = obstacle_name
+        req.initial_pose = pose
+        req.model_xml = self.obs_xml
+
+        try:
+            res = self.spawn_model(req)
+            if res.success:
+                with self.lock:
+                    self.obstacle_seq += 1
+                    self.obstacles.append(obstacle_name)
+                return obstacle_name
+            else:
+                rospy.logerr("Could not place obstacle. Message: %s".format(res.status_message))
+                return None
+        except rospy.ServiceException as e:
+            rospy.logerr("Could not place obstacle. Message %s".format(e))
+            return None
 
     def read_conf(self):
 

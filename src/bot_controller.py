@@ -137,6 +137,8 @@ class BotController:
             start = target
 
         return mission_time
-    
 
+    def update_bot_configuration(self):
+        """updates the gazebo bot configuration and the power consumption in one place"""
+        pass
 
