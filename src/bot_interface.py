@@ -83,64 +83,6 @@ class ControlInterface:
         self.obstacle_seq = 0
         self.lock = Lock()
 
-    def place_obstacle(self, x, y):
-
-        pose = Pose()
-        zero_q = quaternion_from_euler(0, 0, 0)
-        pose.position.x = x
-        pose.position.y = y
-        pose.position.z = 0
-        pose.orientation.x = zero_q[0]
-        pose.orientation.y = zero_q[1]
-        pose.orientation.z = zero_q[2]
-        pose.orientation.w = zero_q[3]
-
-        with self.lock:
-            obstacle_name = 'Obstacle_{0}'.format(self.obstacle_seq)
-
-        req = SpawnModelRequest()
-        req.model_name = obstacle_name
-        req.initial_pose = pose
-        req.model_xml = self.obs_xml
-
-        try:
-            res = self.spawn_model(req)
-            if res.success:
-                with self.lock:
-                    self.obstacle_seq += 1
-                    self.obstacles.append(obstacle_name)
-                return obstacle_name
-            else:
-                rospy.logerr("Could not place obstacle. Message: {0}".format(res.status_message))
-                return None
-        except rospy.ServiceException as e:
-            rospy.logerr("Could not place obstacle. Message {0}".format(e))
-            return None
-
-    def remove_obstacle(self, obstacle_name):
-
-        with self.lock:
-            if obstacle_name not in self.obstacles:
-                rospy.logerr('The obstacle could not find in the world: {0}'.format(obstacle_name))
-                return False
-
-        req = DeleteModelRequest()
-        req.model_name = obstacle_name
-        try:
-            res = self.delete_model(req)
-
-            if res.success:
-                with self.lock:
-                    self.obstacles.remove(obstacle_name)
-
-                return True
-            else:
-                rospy.logerr("Could not remove obstacle. Message: {0}".format(res.status_message))
-                return None
-        except rospy.ServiceException as e:
-            rospy.logerr("Could not place obstacle. Message {0}".format(e))
-            return None
-
     def read_conf(self):
 
         with open(conf_file) as json_file:
@@ -330,6 +272,66 @@ class ControlInterface:
         self.get_battery_charge()
         if self.battery_charge < battery_low_threshold * self.battery_capacity:
             self.ig_client.cancel_goal()
+
+    def place_obstacle(self, x, y):
+        """similar to phase 1"""
+
+        pose = Pose()
+        zero_q = quaternion_from_euler(0, 0, 0)
+        pose.position.x = x
+        pose.position.y = y
+        pose.position.z = 0
+        pose.orientation.x = zero_q[0]
+        pose.orientation.y = zero_q[1]
+        pose.orientation.z = zero_q[2]
+        pose.orientation.w = zero_q[3]
+
+        with self.lock:
+            obstacle_name = 'Obstacle_{0}'.format(self.obstacle_seq)
+
+        req = SpawnModelRequest()
+        req.model_name = obstacle_name
+        req.initial_pose = pose
+        req.model_xml = self.obs_xml
+
+        try:
+            res = self.spawn_model(req)
+            if res.success:
+                with self.lock:
+                    self.obstacle_seq += 1
+                    self.obstacles.append(obstacle_name)
+                return obstacle_name
+            else:
+                rospy.logerr("Could not place obstacle. Message: {0}".format(res.status_message))
+                return None
+        except rospy.ServiceException as e:
+            rospy.logerr("Could not place obstacle. Message {0}".format(e))
+            return None
+
+    def remove_obstacle(self, obstacle_name):
+        """similar to phase 1"""
+
+        with self.lock:
+            if obstacle_name not in self.obstacles:
+                rospy.logerr('The obstacle could not find in the world: {0}'.format(obstacle_name))
+                return False
+
+        req = DeleteModelRequest()
+        req.model_name = obstacle_name
+        try:
+            res = self.delete_model(req)
+
+            if res.success:
+                with self.lock:
+                    self.obstacles.remove(obstacle_name)
+
+                return True
+            else:
+                rospy.logerr("Could not remove obstacle. Message: {0}".format(res.status_message))
+                return None
+        except rospy.ServiceException as e:
+            rospy.logerr("Could not place obstacle. Message {0}".format(e))
+            return None
 
 
 def main():
