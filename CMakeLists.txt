@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslib
   rospy
+  roslaunch
   gazebo_msgs
   gazebo_plugins
   gazebo_ros
