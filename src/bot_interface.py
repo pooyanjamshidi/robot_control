@@ -259,6 +259,7 @@ class ControlInterface:
     def get_battery_charge(self):
         rospy.init_node("battery_monitor_client")
         rospy.Subscriber("/mobile_base/commands/charge_level", Float64, self.get_charge)
+        return self.get_charge
 
     def active_cb(self):
         pass
