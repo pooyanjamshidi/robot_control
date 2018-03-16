@@ -344,7 +344,7 @@ def main():
     state = ci.get_bot_state()
     print("Bot is located at ({0}, {1}), facing {2} and going with a speed of {3} m/s".format(state[0], state[1], state[2], state[3]))
 
-    # ci.set_power_load(1)
+    ci.set_power_load(1)
     ci.set_charge(1)
     ci.set_charging(1)
 
