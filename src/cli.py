@@ -71,7 +71,7 @@ def baselineA(bot):
     mission_time_predicted = bot.predict_mission_time(start, targets)
 
     start_time = rospy.Time.now()
-    task_finished = bot.go_instructions_multiple_tasks(start, targets)
+    task_finished, log = bot.go_instructions_multiple_tasks(start, targets)
     finish_time = rospy.Time.now()
 
     mission_time_actual = finish_time - start_time

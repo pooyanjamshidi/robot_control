@@ -73,10 +73,14 @@ class BotController:
         :return:
         """
         number_of_tasks_accomplished = 0
+        locs = []
 
         for target in targets:
             current_start = start
             success, low_charge = self.go_instructions(current_start, target)
+
+            x, y, w, v = self.gazebo.get_bot_state()
+            locs.append({"start": current_start, "target": target, "x": x, "y": y, "task_accomplished": success})
 
             if success:
                 start = target
@@ -91,7 +95,7 @@ class BotController:
                 self.undock()
                 start = charging_id
 
-        return number_of_tasks_accomplished
+        return number_of_tasks_accomplished, locs
 
     def go_charging(self, loc):
         """bot goes to the closest charging station from the current waypoint it is on"""
