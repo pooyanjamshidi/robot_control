@@ -58,8 +58,10 @@ def stop(launch):
 
 
 def baselineA(bot):
-    init(rosnode)
     launch = launch_cp1_base('default')
+
+    # track battery charge
+    bot.gazebo.get_battery_charge()
 
     #  sleep for few sec to bring up gazebo process properly
     sleep(10)
@@ -97,7 +99,7 @@ def baselineC(bot):
 
 
 def main():
-
+    init(rosnode)
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=commands, help='The command to issue to Gazebo')
     bot = BotController()

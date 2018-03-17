@@ -31,7 +31,7 @@ map_name = 'map'
 max_waiting_time = 100
 
 # the threshold below which the bot will go to the charging station
-battery_low_threshold = 0.2
+battery_low_threshold = 0.9
 
 conf_file = '../conf/conf.json'
 
@@ -252,12 +252,13 @@ class ControlInterface:
         # print(battery_charge)
 
     def monitor_battery(self):
-        rospy.init_node("battery_monitor_client")
+        # rospy.init_node("battery_monitor_client")
         rospy.Subscriber("/mobile_base/commands/charge_level", Float64, self.get_charge)
         rospy.spin()
 
     def get_battery_charge(self):
-        rospy.init_node("battery_monitor_client")
+        '''starts monitoring battery and update battery_charge'''
+        # rospy.init_node("battery_monitor_client")
         rospy.Subscriber("/mobile_base/commands/charge_level", Float64, self.get_charge)
         return self.get_charge
 
@@ -269,9 +270,12 @@ class ControlInterface:
 
     def feedback_cb(self, feedback):
         # first get the latest charge and then determine whether the bot should abort the task
-        self.get_battery_charge()
+        # self.get_battery_charge()
         if self.battery_charge < battery_low_threshold * self.battery_capacity:
             self.ig_client.cancel_goal()
+            print("Battery level is low and the goal has been cancelled to send the robot to charge station")
+        else:
+            print("Battery level is OK")
 
     def place_obstacle(self, x, y):
         """similar to phase 1"""
