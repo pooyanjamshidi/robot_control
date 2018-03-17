@@ -1,14 +1,17 @@
 import argparse
 import psutil
+from operator import itemgetter
+
 import rospy
 import math
+import heapq
 from roslaunch import *
 from roslaunch import rlutil, parent
 import roslaunch
 from bot_interface import ControlInterface
 from bot_controller import BotController
 
-commands = ["baseline_a", "baseline_b", "baseline_c"]
+commands = ["baseline_a", "baseline_b", "baseline_c", "place_obstacle", "remove_obstacle"]
 rosnode = "cp1_node"
 launch_configs = {
     'default': 'cp1-base-test.launch'
@@ -48,10 +51,9 @@ def stop(launch):
             proc.kill()
 
 
-def baselineA():
+def baselineA(bot):
     init(rosnode)
     launch = launch_cp1_base('default')
-    bot = BotController()
     mission_time_predicted = bot.predict_mission_time(start, targets)
     start_time = rospy.Time.now()
     task_finished = bot.go_instructions_multiple_tasks(start, targets)
@@ -69,11 +71,11 @@ def baselineA():
     stop(launch)
 
 
-def baselineB():
+def baselineB(bot):
     pass
 
 
-def baselineC():
+def baselineC(bot):
     pass
 
 
@@ -81,15 +83,42 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=commands, help='The command to issue to Gazebo')
+    bot = BotController()
+
+    waypoints_locs = {}
+    waypoints = bot.map_server.get_waypoints()
+    for waypoint in waypoints:
+        loc = bot.map_server.waypoint_to_coords(waypoint)
+        waypoints_locs[waypoint] = loc
 
     args = parser.parse_args()
 
     if args.command == "baseline_a":
-        baselineA()
+        baselineA(bot)
     elif args.command == "baseline_b":
-        baselineB()
+        baselineB(bot)
     elif args.command == "baseline_c":
-        baselineC()
+        baselineC(bot)
+    elif args.command == "place_obstacle":
+        # get the current position of the bot and place an obstacle in front few meters away
+        x, y, w, v = bot.gazebo.get_bot_state()
+        distances_to_locs = {}
+        for waypoint in waypoints:
+            loc = bot.map_server.waypoint_to_coords(waypoint)
+            d = distance([x, y], [loc['x'], loc['y']])
+            distances_to_locs[waypoint] = d
+            
+        #  place two obstacles on the closes waypoints to the current location of the robot
+        two_closest_locs = heapq.nsmallest(2, distances_to_locs.iteritems(), itemgetter(1))
+        loc1 = bot.map_server.waypoint_to_coords(two_closest_locs[0][0])
+        bot.gazebo.place_obstacle(loc1['x'], loc1['y'])
+        loc2 = bot.map_server.waypoint_to_coords(two_closest_locs[1][0])
+        bot.gazebo.place_obstacle(loc2['x'], loc2['y'])
+
+    elif args.command == "remove_obstacle":
+        obstacles = bot.gazebo.obstacles
+        for obstacle in obstacles:
+            bot.gazebo.remove_obstacle(obstacle)
 
 
 if __name__ == '__main__':

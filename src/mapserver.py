@@ -44,6 +44,9 @@ class MapServer:
     def get_waypoint(self, waypoint_id):
         return filter(lambda waypoint: waypoint["node-id"] == waypoint_id, self.waypoint_list)
 
+    def get_waypoints(self):
+        return self.waypoint_list
+
     def dfs_paths(self, adj, start, goal):
         """
         Depth first search for deriving the paths from start to goal
