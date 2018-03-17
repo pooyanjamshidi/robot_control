@@ -10,7 +10,7 @@ class MapServer:
             self.waypoint_list = data["map"]
             self.waypoint_idx = {}
             for i in range(len(self.waypoint_list)):
-                self.waypoint_idx[self.waypoint_list[i]] = i
+                self.waypoint_idx[self.waypoint_list[i]['node-id']] = i
 
             if 'stations' in data:
                 self.stations = data["stations"]
@@ -45,7 +45,7 @@ class MapServer:
         return filter(lambda waypoint: waypoint["node-id"] == waypoint_id, self.waypoint_list)
 
     def get_waypoints(self):
-        return self.waypoint_list
+        return self.waypoint_idx.keys()
 
     def dfs_paths(self, adj, start, goal):
         """
