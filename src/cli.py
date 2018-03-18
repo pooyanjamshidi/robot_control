@@ -46,7 +46,7 @@ def launch_cp1_base(config, init_node = "cp1_node"):
 
 def init(node):
     rospy.init_node(node)
-    rospy.on_shutdown(stop)
+    # rospy.on_shutdown(stop)
 
 
 def stop(launch):
@@ -73,7 +73,7 @@ def baselineA(bot):
     mission_time_predicted = bot.predict_mission_time(start, targets)
 
     start_time = rospy.Time.now()
-    task_finished, log = bot.go_instructions_multiple_tasks(start, targets)
+    task_finished, locs = bot.go_instructions_multiple_tasks(start, targets)
     finish_time = rospy.Time.now()
 
     mission_time_actual = finish_time - start_time
@@ -91,7 +91,43 @@ def baselineA(bot):
 
 
 def baselineB(bot):
-    pass
+    launch = launch_cp1_base('default')
+
+    # track battery charge
+    bot.gazebo.get_battery_charge()
+
+    #  sleep for few sec to bring up gazebo process properly
+    sleep(10)
+
+    # put the robot at the start position
+    start_coords = bot.map_server.waypoint_to_coords(start)
+    bot.gazebo.set_bot_position(start_coords['x'], start_coords['y'], 0)
+
+    mission_time_predicted = bot.predict_mission_time(start, targets)
+
+    #  place an obstacle before start
+    a_waypoint = bot.map_server.get_random_waypoint()
+    loc = bot.map_server.waypoint_to_coords(a_waypoint)
+    bot.gazebo.place_obstacle(loc['x'], loc['y'])
+
+    start_time = rospy.Time.now()
+    task_finished, locs = bot.go_instructions_multiple_tasks(start, targets)
+    finish_time = rospy.Time.now()
+
+    mission_time_actual = finish_time - start_time
+
+    x, y, w, v = bot.gazebo.get_bot_state()
+    charge = bot.gazebo.get_battery_charge()
+    target_loc = bot.map_server.waypoint_to_coords(targets[-1])
+    distance_to_target = distance([x, y], [target_loc['x'], target_loc['y']])
+
+    print("The bot finished {0} tasks in the mission and the current battery level is {1}Ah \n".format(task_finished,
+                                                                                                       charge))
+    print("The robot currently positioned at: x={0}, y={1}".format(x, y))
+    print("The mission was finished in {0} seconds, while it was predicted to finish in {1} seconds".format(
+        mission_time_actual, mission_time_predicted))
+
+    stop(launch)
 
 
 def baselineC(bot):
@@ -114,24 +150,18 @@ def main():
 
     if args.command == "baseline_a":
         baselineA(bot)
+
     elif args.command == "baseline_b":
         baselineB(bot)
+
     elif args.command == "baseline_c":
         baselineC(bot)
+
     elif args.command == "place_obstacle":
         # get the current position of the bot and place an obstacle in front few meters away
         x, y, w, v = bot.gazebo.get_bot_state()
-        distances_to_locs = {}
-        for waypoint in waypoints:
-            loc = bot.map_server.waypoint_to_coords(waypoint)
-            d = distance([x, y], [loc['x'], loc['y']])
-            distances_to_locs[waypoint] = d
-
-        #  place two obstacles on the closes waypoints to the current location of the robot
-        two_closest_locs = heapq.nsmallest(2, distances_to_locs.iteritems(), itemgetter(1))
-        loc1 = bot.map_server.waypoint_to_coords(two_closest_locs[0][0])
+        loc1, loc2 = bot.map_server.get_two_closest_waypoints(x, y)
         bot.gazebo.place_obstacle(loc1['x'], loc1['y'])
-        loc2 = bot.map_server.waypoint_to_coords(two_closest_locs[1][0])
         bot.gazebo.place_obstacle(loc2['x'], loc2['y'])
 
     elif args.command == "remove_obstacle":

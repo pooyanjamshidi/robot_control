@@ -1,6 +1,9 @@
 import json
 import numpy as np
 import math
+import heapq
+from operator import itemgetter
+import random
 
 
 def distance(loc1, loc2):
@@ -129,3 +132,25 @@ class MapServer:
                     shortest_path = path
 
         return shortest_path
+
+    def get_two_closest_waypoints(self, x, y):
+        distances_to_locs = {}
+        for waypoint in self.waypoints:
+            loc = self.waypoint_to_coords(waypoint)
+            d = distance([x, y], [loc['x'], loc['y']])
+            distances_to_locs[waypoint] = d
+
+        #  place two obstacles on the closes waypoints to the current location of the robot
+        two_closest_locs = heapq.nsmallest(2, distances_to_locs.iteritems(), itemgetter(1))
+        loc1 = self.waypoint_to_coords(two_closest_locs[0][0])
+        loc2 = self.waypoint_to_coords(two_closest_locs[1][0])
+
+        return loc1, loc2
+
+    def get_random_waypoint(self):
+        """ get a random waypoint which is not aq charging station"""
+        L = len(self.waypoints)
+        waypoint = self.waypoints[random.randint(0, L-1)]
+        while waypoint in self.stations:
+            waypoint = self.waypoints[random.randint(0, L-1)]
+        return waypoint

@@ -31,7 +31,7 @@ map_name = 'map'
 max_waiting_time = 100
 
 # the threshold below which the bot will go to the charging station
-battery_low_threshold = 0.99
+battery_low_threshold = 0.20
 
 conf_file = '../conf/conf.json'
 
