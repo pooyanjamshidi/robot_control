@@ -1,5 +1,10 @@
 import json
 import numpy as np
+import math
+
+
+def distance(loc1, loc2):
+    return math.sqrt((loc1[0] - loc2[0]) ** 2 + (loc1[1] - loc2[1]) ** 2)
 
 
 class MapServer:
@@ -16,6 +21,7 @@ class MapServer:
                 self.stations = data["stations"]
 
             self.adj_matrix = self.get_adjacency_matrix()
+            self.waypoints = self.get_waypoints()
 
     def waypoint_to_coords(self, waypoint_id):
         """ given a way point, produce its coordinates """
@@ -24,6 +30,20 @@ class MapServer:
         waypoint_list = self.get_waypoint(waypoint_id)
         waypoint = waypoint_list[0]
         return waypoint['coords']
+
+    def coords_to_waypoint(self, loc):
+        """ given a location, it returns the closest waypoint id """
+        closest_waypoint = {}
+        for waypoint in self.waypoints:
+            waypoint_loc = self.waypoint_to_coords(waypoint)
+            d = distance([loc['x'], loc['y']], [waypoint_loc['x'], waypoint_loc['y']])
+            if closest_waypoint.__len__() == 0:
+                closest_waypoint['dist'] = d
+                closest_waypoint['id'] = waypoint
+            elif d < closest_waypoint['dist']:
+                closest_waypoint['dist'] = d
+                closest_waypoint['id'] = waypoint
+        return closest_waypoint
 
     def is_waypoint(self, waypoint_id):
         """ given a string, determine if it is actually a waypoint id """
@@ -38,7 +58,7 @@ class MapServer:
         else:
             return False
 
-    def get_charging_station(self):
+    def get_charging_stations(self):
         return self.stations
 
     def get_waypoint(self, waypoint_id):
@@ -47,7 +67,12 @@ class MapServer:
     def get_waypoints(self):
         return self.waypoint_idx.keys()
 
-    def dfs_paths(self, adj, start, goal):
+    def idx_to_waypoint(self, idx):
+        for k, v in self.waypoint_idx.items():
+            if v == idx:
+                return k
+
+    def dfs_paths(self, start, goal):
         """
         Depth first search for deriving the paths from start to goal
         :param adj:
@@ -56,12 +81,14 @@ class MapServer:
         :return:
         """
         stack = [(start, [start])]
+        L = len(self.waypoint_list)
         while stack:
             (vertex, path) = stack.pop()
             next_nodes = []
-            for i in range(adj[vertex, :].size):
-                if adj[vertex, i] == 1 and i not in path:
-                    next_nodes.append(i)
+            for i in range(L):
+                next_waypoint = self.idx_to_waypoint(i)
+                if self.adj_matrix[self.waypoint_idx[vertex], i] == 1 and next_waypoint not in path:
+                    next_nodes.append(next_waypoint)
             for next in next_nodes:
                 if next == goal:
                     yield path + [next]
@@ -86,7 +113,7 @@ class MapServer:
 
         return adj
 
-    def closest_charging_station(self, waypoint_id):
+    def closest_charging_station(self, waypoint):
         """Returns the closest path to s charging station
 
         :param waypoint_id:
@@ -94,9 +121,11 @@ class MapServer:
         """
         shortest_path = []
         for station in self.stations:
-            paths = self.dfs_paths(waypoint_id, station)
+            paths = self.dfs_paths(waypoint, station)
             for path in paths:
-                if len(shortest_path) > 0 and len(path) < len(shortest_path):
+                if len(shortest_path) == 0:
+                    shortest_path = path
+                elif len(path) < len(shortest_path):
                     shortest_path = path
 
         return shortest_path

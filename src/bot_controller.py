@@ -17,7 +17,7 @@ class BotController:
         self.instruction_server = InstructionDB(instructions_db_file)
         self.gazebo = ControlInterface()
 
-    def go_without_instructions(self, start, target):
+    def go_without_instructions(self, target):
         """bot goes directly from start to the target using move base
 
         :param start: start waypoint id
@@ -29,12 +29,12 @@ class BotController:
             self.gazebo.connect_to_navigation_server()
 
         # get the x, y coordinates from the map server and put the robot there using the gazebo interface
-        start_coords = self.map_server.waypoint_to_coords(start)
-        self.gazebo.set_bot_position(start_coords['x'], start_coords['y'], 0)
+        # start_coords = self.map_server.waypoint_to_coords(start)
+        # self.gazebo.set_bot_position(start_coords['x'], start_coords['y'], 0)
         target_coords = self.map_server.waypoint_to_coords(target)
 
         # head to the target
-        res = self.gazebo.move_to_point(start_coords, target_coords)
+        res = self.gazebo.move_to_point(target_coords['x'], target_coords['y'])
 
         return res
 
@@ -78,6 +78,7 @@ class BotController:
         for target in targets:
             current_start = start
             success, low_charge = self.go_instructions(current_start, target)
+            low_charge = self.gazebo.ig_server.new_goal_preempt_request
 
             x, y, w, v = self.gazebo.get_bot_state()
             locs.append({"start": current_start, "target": target, "x": x, "y": y, "task_accomplished": success})
@@ -97,11 +98,12 @@ class BotController:
 
         return number_of_tasks_accomplished, locs
 
-    def go_charging(self, loc):
+    def go_charging(self, current_loc):
         """bot goes to the closest charging station from the current waypoint it is on"""
-        path_to_charging = self.map_server.closest_charging_station(loc)
+        current_waypoint = self.map_server.coords_to_waypoint(current_loc)['id']
+        path_to_charging = self.map_server.closest_charging_station(current_waypoint)
         charging_id = path_to_charging[-1]
-        res = self.go_without_instructions(loc, charging_id)
+        res = self.go_without_instructions(charging_id)
         if res:
             self.dock()
         return res, charging_id

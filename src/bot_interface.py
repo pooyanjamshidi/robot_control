@@ -31,7 +31,7 @@ map_name = 'map'
 max_waiting_time = 100
 
 # the threshold below which the bot will go to the charging station
-battery_low_threshold = 0.9
+battery_low_threshold = 0.99
 
 conf_file = '../conf/conf.json'
 
@@ -72,6 +72,7 @@ class ControlInterface:
 
         self.movebase_client = None
         self.ig_client = None
+        self.ig_server = None
 
         self.bot_conf = None
 
@@ -133,6 +134,7 @@ class ControlInterface:
 
     def connect_to_ig_action_server(self):
 
+        self.ig_server = actionlib.SimpleActionServer("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
         self.ig_client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
 
         while not self.ig_client.wait_for_server(rospy.Duration.from_sec(max_waiting_time)):
@@ -164,6 +166,7 @@ class ControlInterface:
         success = self.ig_client.wait_for_result(rospy.Duration.from_sec(max_waiting_time))
 
         state = self.ig_client.get_state()
+
         if success and state == GoalStatus.SUCCEEDED:
             rospy.loginfo("Successfully executed the instructions and reached the destination")
             return True, False
@@ -257,16 +260,16 @@ class ControlInterface:
         rospy.spin()
 
     def get_battery_charge(self):
-        '''starts monitoring battery and update battery_charge'''
+        """starts monitoring battery and update battery_charge"""
         # rospy.init_node("battery_monitor_client")
         rospy.Subscriber("/mobile_base/commands/charge_level", Float64, self.get_charge)
         return self.get_charge
 
     def active_cb(self):
-        pass
+        print("I'm active!")
 
     def done_cb(self, status, result):
-        pass
+        print("I'm done: status:{0}, result:{1}".format(status, result))
 
     def feedback_cb(self, feedback):
         # first get the latest charge and then determine whether the bot should abort the task
