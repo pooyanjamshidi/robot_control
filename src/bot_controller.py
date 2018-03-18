@@ -109,7 +109,6 @@ class BotController:
         return res, charging_id
 
     def is_fully_charged(self):
-        # self.gazebo.get_battery_charge()
         if self.gazebo.battery_charge == self.gazebo.battery_capacity:
             return True
         else:

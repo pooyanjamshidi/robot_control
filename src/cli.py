@@ -1,9 +1,7 @@
 # general imports
 import argparse
 import psutil
-from operator import itemgetter
 import math
-import heapq
 import os
 
 # import ros libraries
@@ -31,22 +29,19 @@ def distance(loc1, loc2):
     return math.sqrt((loc1[0] - loc2[0]) ** 2 + (loc1[1] - loc2[1]) ** 2)
 
 
-def launch_cp1_base(config, init_node = "cp1_node"):
+def launch_cp1_base(config):
     launch_file = launch_configs[config]
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
     roslaunch.configure_logging(uuid=uuid)
     launch = roslaunch.parent.ROSLaunchParent(uuid, [os.path.expanduser(launch_file_path + launch_file)])
     launch.start()
 
-    # if init_node is not None:
-    #     rospy.init_node(init_node)
-
     return launch
 
 
 def init(node):
-    rospy.init_node(node)
-    # rospy.on_shutdown(stop)
+    rospy.init_node(node, anonymous=True)
+    rospy.on_shutdown(graceful_stop)
 
 
 def stop(launch):
@@ -57,11 +52,15 @@ def stop(launch):
             proc.kill()
 
 
+def graceful_stop():
+    rospy.logdebug("shutting down!")
+
+
 def baselineA(bot):
     launch = launch_cp1_base('default')
 
     # track battery charge
-    bot.gazebo.get_battery_charge()
+    bot.gazebo.track_battery_charge()
 
     #  sleep for few sec to bring up gazebo process properly
     sleep(10)
@@ -79,7 +78,7 @@ def baselineA(bot):
     mission_time_actual = finish_time - start_time
 
     x, y, w, v = bot.gazebo.get_bot_state()
-    charge = bot.gazebo.get_battery_charge()
+    charge = bot.gazebo.battery_charge
     target_loc = bot.map_server.waypoint_to_coords(targets[-1])
     distance_to_target = distance([x, y], [target_loc['x'], target_loc['y']])
 
@@ -94,7 +93,7 @@ def baselineB(bot):
     launch = launch_cp1_base('default')
 
     # track battery charge
-    bot.gazebo.get_battery_charge()
+    bot.gazebo.track_battery_charge()
 
     #  sleep for few sec to bring up gazebo process properly
     sleep(10)
@@ -117,7 +116,7 @@ def baselineB(bot):
     mission_time_actual = finish_time - start_time
 
     x, y, w, v = bot.gazebo.get_bot_state()
-    charge = bot.gazebo.get_battery_charge()
+    charge = bot.gazebo.battery_charge
     target_loc = bot.map_server.waypoint_to_coords(targets[-1])
     distance_to_target = distance([x, y], [target_loc['x'], target_loc['y']])
 
@@ -135,16 +134,12 @@ def baselineC(bot):
 
 
 def main():
+    # bring up a ros node
     init(rosnode)
+
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=commands, help='The command to issue to Gazebo')
     bot = BotController()
-
-    waypoints_locs = {}
-    waypoints = bot.map_server.get_waypoints()
-    for waypoint in waypoints:
-        loc = bot.map_server.waypoint_to_coords(waypoint)
-        waypoints_locs[waypoint] = loc
 
     args = parser.parse_args()
 
