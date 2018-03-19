@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # general imports
 import argparse
 import psutil

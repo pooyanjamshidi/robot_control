@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 import traceback
 import math
 import json
@@ -37,7 +39,6 @@ conf_file = '../conf/conf.json'
 
 default_configuration_id = 0
 default_power_load = 10
-
 
 # This is the model for the obstacle
 obstacle = os.path.expanduser('~/catkin_ws/src/cp1_base/models/box')
@@ -82,6 +83,8 @@ class ControlInterface:
         self.obstacles = []
         self.obstacle_seq = 0
         self.lock = Lock()
+
+        self.battery_previous_update = self.battery_charge
 
     def read_conf(self):
 
@@ -250,9 +253,10 @@ class ControlInterface:
         return self.set_charge_rate_srv(charge_rate)
 
     def get_charge(self, msg):
-        # global battery_charge
         self.battery_charge = msg.data
-        # print(battery_charge)
+        if abs(self.battery_charge - self.battery_previous_update) > self.battery_capacity*0.01:
+            rospy.loginfo("Battery charge: {0}Ah".format(self.battery_charge))
+            self.battery_previous_update = self.battery_charge
 
     def monitor_battery(self):
         # rospy.init_node("battery_monitor_client")
@@ -266,15 +270,13 @@ class ControlInterface:
         return self.get_charge
 
     def active_cb(self):
-        print("I'm active!")
+        rospy.loginfo("Plan is active!")
 
     def done_cb(self, status, result):
-        print("I'm done: status:{0}, result:{1}".format(status, result))
+        rospy.loginfo("I'm done: status:{0}, result:{1}".format(status, result))
 
     def feedback_cb(self, feedback):
         # first get the latest charge and then determine whether the bot should abort the task
-        rospy.logdebug(feedback.status)
-        rospy.logdebug(feedback.text)
         if self.battery_charge < battery_low_threshold * self.battery_capacity:
             self.ig_client.cancel_goal()
             rospy.logdebug("Battery level is low and the goal has been cancelled to send the robot to charge station")

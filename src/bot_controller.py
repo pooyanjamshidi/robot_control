@@ -1,9 +1,12 @@
+#! /usr/bin/env python
+
 """bot controller"""
 import os
 import time
 from mapserver import MapServer
 from instructions_db import InstructionDB
 from bot_interface import ControlInterface
+import rospy
 
 map_file = os.path.expanduser("~/catkin_ws/src/cp1_base/maps/cp1_map.json")
 instructions_db_file = os.path.expanduser("~/catkin_ws/src/cp1_base/instructions/instructions-all.json")
@@ -49,7 +52,7 @@ class BotController:
         # get the yaw (direction) where the robot is headed
         w = self.instruction_server.get_start_heading(start, target)
         if w == -1:
-            print("No information for %s to %s".format(start, target))
+            rospy.loginfo("No information for %s to %s".format(start, target))
             return False
 
         if self.gazebo.ig_client is None:
@@ -88,6 +91,7 @@ class BotController:
                 number_of_tasks_accomplished += 1
 
             if low_charge:
+                rospy.loginfo("The battery is low and the bot is heading to the nearest charging station")
                 bot_state = self.gazebo.get_bot_state()
                 loc = {"x": bot_state[0], "y": bot_state[1]}
                 res, charging_id = self.go_charging(loc)
@@ -116,7 +120,7 @@ class BotController:
 
     def dock(self):
         if self.gazebo.is_charging:
-            print("the bot is currently docked")
+            rospy.loginfo("the bot is currently docked")
             return False
         else:
             self.gazebo.set_charging(1)
@@ -125,9 +129,10 @@ class BotController:
     def undock(self):
         if self.gazebo.is_charging:
             self.gazebo.set_charging(0)
+            rospy.loginfo("The bot is now undocked")
             return True
         else:
-            print("the bot is not docked")
+            rospy.loginfo("The bot is not docked")
             return False
 
     def predict_mission_time(self, start, targets):

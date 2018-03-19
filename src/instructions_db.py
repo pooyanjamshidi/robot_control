@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 """ utility functions for working with waypoints and maps """
 # imports
 import json
