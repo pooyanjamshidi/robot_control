@@ -3,6 +3,7 @@
 """bot controller"""
 import os
 import time
+import math
 from mapserver import MapServer
 from instructions_db import InstructionDB
 from bot_interface import ControlInterface
@@ -11,6 +12,10 @@ import rospy
 map_file = os.path.expanduser("~/catkin_ws/src/cp1_base/maps/cp1_map.json")
 instructions_db_file = os.path.expanduser("~/catkin_ws/src/cp1_base/instructions/instructions-all.json")
 sleep_interval = 5
+distance_threshold = 1
+
+def distance(loc1, loc2):
+    return math.sqrt((loc1[0] - loc2[0]) ** 2 + (loc1[1] - loc2[1]) ** 2)
 
 
 class BotController:
@@ -52,7 +57,7 @@ class BotController:
         # get the yaw (direction) where the robot is headed
         w = self.instruction_server.get_start_heading(start, target)
         if w == -1:
-            rospy.loginfo("No information for %s to %s".format(start, target))
+            rospy.loginfo("No information for {0} to {1}".format(start, target))
             return False
 
         if self.gazebo.ig_client is None:
@@ -64,9 +69,9 @@ class BotController:
 
         # get the instruction code and execute it
         igcode = self.instruction_server.get_instructions(start, target)
-        res, low_charge = self.gazebo.move_bot_with_igcode(igcode)
+        res = self.gazebo.move_bot_with_igcode(igcode)
 
-        return res, low_charge
+        return res
 
     def go_instructions_multiple_tasks(self, start, targets):
         """the same version of go_instructions but for multiple tasks for cp1
@@ -80,17 +85,24 @@ class BotController:
 
         for target in targets:
             current_start = start
-            success, low_charge = self.go_instructions(current_start, target)
-            low_charge = self.gazebo.ig_server.new_goal_preempt_request
+            success = self.go_instructions(current_start, target)
+            # low_charge = self.gazebo.ig_server.new_goal_preempt_request
 
             x, y, w, v = self.gazebo.get_bot_state()
+            loc_target = self.map_server.waypoint_to_coords(target)
+
+            #  check robot distance to the target, if it is not then
+            if distance([x, y], [loc_target['x'], loc_target['y']]) > 1:
+                success = False
+
             locs.append({"start": current_start, "target": target, "x": x, "y": y, "task_accomplished": success})
 
             if success:
+                rospy.loginfo("A new task ({0}->{1}) has been accomplished".format(current_start, target))
                 start = target
                 number_of_tasks_accomplished += 1
 
-            if low_charge:
+            if self.gazebo.is_battery_low:
                 rospy.loginfo("The battery is low and the bot is heading to the nearest charging station")
                 bot_state = self.gazebo.get_bot_state()
                 loc = {"x": bot_state[0], "y": bot_state[1]}

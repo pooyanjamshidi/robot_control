@@ -33,7 +33,7 @@ map_name = 'map'
 max_waiting_time = 100
 
 # the threshold below which the bot will go to the charging station
-battery_low_threshold = 0.20
+battery_low_threshold = 0.99
 
 conf_file = '../conf/conf.json'
 
@@ -45,6 +45,20 @@ obstacle = os.path.expanduser('~/catkin_ws/src/cp1_base/models/box')
 
 
 # Here we manage the world, bot, and control interface
+
+def status_translator(status):
+    if 0: print ''
+    elif status == GoalStatus.PENDING   : state='PENDING'
+    elif status == GoalStatus.ACTIVE    : state='ACTIVE'
+    elif status == GoalStatus.PREEMPTED : state='PREEMPTED'
+    elif status == GoalStatus.SUCCEEDED : state='SUCCEEDED'
+    elif status == GoalStatus.ABORTED   : state='ABORTED'
+    elif status == GoalStatus.REJECTED  : state='REJECTED'
+    elif status == GoalStatus.PREEMPTING: state='PREEMPTING'
+    elif status == GoalStatus.RECALLING : state='RECALLING'
+    elif status == GoalStatus.RECALLED  : state='RECALLED'
+    elif status == GoalStatus.LOST      : state='LOST'
+    return 'Status({} - {})'.format(status, state)
 
 
 class ControlInterface:
@@ -70,6 +84,7 @@ class ControlInterface:
         self.battery_charge = -1
         self.battery_capacity = 1.2009
         self.is_charging = False
+        self.is_battery_low = False
 
         self.movebase_client = None
         self.ig_client = None
@@ -137,7 +152,7 @@ class ControlInterface:
 
     def connect_to_ig_action_server(self):
 
-        self.ig_server = actionlib.SimpleActionServer("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
+        # self.ig_server = actionlib.SimpleActionServer("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
         self.ig_client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
 
         while not self.ig_client.wait_for_server(rospy.Duration.from_sec(max_waiting_time)):
@@ -172,13 +187,10 @@ class ControlInterface:
 
         if success and state == GoalStatus.SUCCEEDED:
             rospy.loginfo("Successfully executed the instructions and reached the destination")
-            return True, False
-        elif state == GoalStatus.PREEMPTED:
-            # the second part is used to determine whether should go to charging
-            return False, True
+            return True
         else:
             rospy.loginfo("could not execute the instructions")
-            return False, False
+            return False
 
     def set_bot_position(self, x, y, w):
 
@@ -254,6 +266,12 @@ class ControlInterface:
 
     def get_charge(self, msg):
         self.battery_charge = msg.data
+        #  determine whether the battery is low or not
+        if self.battery_charge < battery_low_threshold:
+            self.is_battery_low = True
+        else:
+            self.is_battery_low = False
+
         if abs(self.battery_charge - self.battery_previous_update) > self.battery_capacity*0.01:
             rospy.loginfo("Battery charge: {0}Ah".format(self.battery_charge))
             self.battery_previous_update = self.battery_charge
@@ -273,14 +291,19 @@ class ControlInterface:
         rospy.loginfo("Plan is active!")
 
     def done_cb(self, status, result):
-        rospy.loginfo("I'm done: status:{0}, result:{1}".format(status, result))
+        if status == GoalStatus.SUCCEEDED:
+            rospy.loginfo("done_cb: Task succeeded!")
+        else:
+            rospy.logwarn("done_cb: Unhandled Action response: {}".format(status_translator(status)))
 
     def feedback_cb(self, feedback):
         # first get the latest charge and then determine whether the bot should abort the task
         if self.battery_charge < battery_low_threshold * self.battery_capacity:
             self.ig_client.cancel_goal()
+            self.is_battery_low = True
             rospy.logdebug("Battery level is low and the goal has been cancelled to send the robot to charge station")
         else:
+            self.is_battery_low = False
             rospy.logdebug("Battery level is OK")
 
     def place_obstacle(self, x, y):

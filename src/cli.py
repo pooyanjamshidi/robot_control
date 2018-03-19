@@ -5,6 +5,7 @@ import argparse
 import psutil
 import math
 import os
+import time
 
 # import ros libraries
 from time import sleep
@@ -73,9 +74,10 @@ def baselineA(bot):
 
     mission_time_predicted = bot.predict_mission_time(start, targets)
 
-    start_time = rospy.Time.now()
+    start_time = time.time()
+    rospy.loginfo("A mission with {0} tasks has been launched".format(len(targets)))
     task_finished, locs = bot.go_instructions_multiple_tasks(start, targets)
-    finish_time = rospy.Time.now()
+    finish_time = time.time()
 
     mission_time_actual = finish_time - start_time
 
@@ -84,9 +86,9 @@ def baselineA(bot):
     target_loc = bot.map_server.waypoint_to_coords(targets[-1])
     distance_to_target = distance([x, y], [target_loc['x'], target_loc['y']])
 
-    print("The bot finished {0} tasks in the mission and the current battery level is {1}Ah \n".format(task_finished, charge))
-    print("The robot currently positioned at: x={0}, y={1}".format(x, y))
-    print("The mission was finished in {0} seconds, while it was predicted to finish in {1} seconds".format(mission_time_actual, mission_time_predicted))
+    rospy.loginfo("The bot finished {0} tasks in the mission and the current battery level is {1}Ah \n".format(task_finished, charge))
+    rospy.loginfo("The robot currently positioned at: x={0}, y={1}".format(x, y))
+    rospy.loginfo("The mission was finished in {0} seconds, while it was predicted to finish in {1} seconds".format(mission_time_actual, mission_time_predicted))
 
     stop(launch)
 
@@ -107,11 +109,13 @@ def baselineB(bot):
     mission_time_predicted = bot.predict_mission_time(start, targets)
 
     #  place an obstacle before start
-    a_waypoint = bot.map_server.get_random_waypoint()
+    # a_waypoint = bot.map_server.get_random_waypoint()
+    a_waypoint = 'l4'
     loc = bot.map_server.waypoint_to_coords(a_waypoint)
     bot.gazebo.place_obstacle(loc['x'], loc['y'])
 
     start_time = rospy.Time.now()
+    rospy.loginfo("A mission with {0} tasks has been launched".format(len(targets)))
     task_finished, locs = bot.go_instructions_multiple_tasks(start, targets)
     finish_time = rospy.Time.now()
 
@@ -122,10 +126,10 @@ def baselineB(bot):
     target_loc = bot.map_server.waypoint_to_coords(targets[-1])
     distance_to_target = distance([x, y], [target_loc['x'], target_loc['y']])
 
-    print("The bot finished {0} tasks in the mission and the current battery level is {1}Ah \n".format(task_finished,
+    rospy.loginfo("The bot finished {0} tasks in the mission and the current battery level is {1}Ah \n".format(task_finished,
                                                                                                        charge))
-    print("The robot currently positioned at: x={0}, y={1}".format(x, y))
-    print("The mission was finished in {0} seconds, while it was predicted to finish in {1} seconds".format(
+    rospy.loginfo("The robot currently positioned at: x={0}, y={1}".format(x, y))
+    rospy.loginfo("The mission was finished in {0} seconds, while it was predicted to finish in {1} seconds".format(
         mission_time_actual, mission_time_predicted))
 
     stop(launch)
