@@ -156,7 +156,7 @@ class ControlInterface:
         self.ig_client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
 
         while not self.ig_client.wait_for_server(rospy.Duration.from_sec(max_waiting_time)):
-            rospy.loginfo("waiting for the ig_action_server")
+            rospy.logwarn("waiting for the ig_action_server")
 
         rospy.loginfo("successfully connected to the ig_action_server")
         return True
@@ -299,12 +299,12 @@ class ControlInterface:
     def feedback_cb(self, feedback):
         # first get the latest charge and then determine whether the bot should abort the task
         if self.battery_charge < battery_low_threshold * self.battery_capacity:
-            self.ig_client.cancel_goal()
+            # self.ig_client.cancel_goal()
             self.is_battery_low = True
-            rospy.logdebug("Battery level is low and the goal has been cancelled to send the robot to charge station")
+            rospy.logwarn("Battery level is low and the goal has been cancelled to send the robot to charge station")
         else:
             self.is_battery_low = False
-            rospy.logdebug("Battery level is OK")
+            rospy.loginfo("Battery level is OK")
 
     def place_obstacle(self, x, y):
         """similar to phase 1"""

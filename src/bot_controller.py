@@ -14,6 +14,7 @@ instructions_db_file = os.path.expanduser("~/catkin_ws/src/cp1_base/instructions
 sleep_interval = 5
 distance_threshold = 1
 
+
 def distance(loc1, loc2):
     return math.sqrt((loc1[0] - loc2[0]) ** 2 + (loc1[1] - loc2[1]) ** 2)
 
@@ -57,7 +58,7 @@ class BotController:
         # get the yaw (direction) where the robot is headed
         w = self.instruction_server.get_start_heading(start, target)
         if w == -1:
-            rospy.loginfo("No information for {0} to {1}".format(start, target))
+            rospy.logerr("No information for {0} to {1}".format(start, target))
             return False
 
         if self.gazebo.ig_client is None:
@@ -92,10 +93,13 @@ class BotController:
             loc_target = self.map_server.waypoint_to_coords(target)
 
             #  check robot distance to the target, if it is not then
-            if distance([x, y], [loc_target['x'], loc_target['y']]) > 1:
+            d = distance([x, y], [loc_target['x'], loc_target['y']])
+            if d > distance_threshold and success:
+                rospy.logwarn("The robot is not close enough to the expected target, so we do not count this task done!")
+                start = target
                 success = False
 
-            locs.append({"start": current_start, "target": target, "x": x, "y": y, "task_accomplished": success})
+            locs.append({"start": current_start, "target": target, "x": x, "y": y, "task_accomplished": success, "dist_to_target": d})
 
             if success:
                 rospy.loginfo("A new task ({0}->{1}) has been accomplished".format(current_start, target))
@@ -103,10 +107,11 @@ class BotController:
                 number_of_tasks_accomplished += 1
 
             if self.gazebo.is_battery_low:
-                rospy.loginfo("The battery is low and the bot is heading to the nearest charging station")
                 bot_state = self.gazebo.get_bot_state()
                 loc = {"x": bot_state[0], "y": bot_state[1]}
                 res, charging_id = self.go_charging(loc)
+                while not res:
+                    res, charging_id = self.go_charging(loc)
                 while not self.is_fully_charged():
                     time.sleep(sleep_interval)
                 self.undock()
@@ -116,25 +121,30 @@ class BotController:
 
     def go_charging(self, current_loc):
         """bot goes to the closest charging station from the current waypoint it is on"""
+        rospy.logwarn("The battery is low and the bot is now heading to the nearest charging station")
         current_waypoint = self.map_server.coords_to_waypoint(current_loc)['id']
         path_to_charging = self.map_server.closest_charging_station(current_waypoint)
         charging_id = path_to_charging[-1]
         res = self.go_without_instructions(charging_id)
         if res:
             self.dock()
+        else:
+            rospy.logwarn("The instruction to go to the nearest charging station was failed")
         return res, charging_id
 
     def is_fully_charged(self):
         if self.gazebo.battery_charge == self.gazebo.battery_capacity:
+            rospy.loginfo("Battery is fully charged.")
             return True
         else:
             return False
 
     def dock(self):
         if self.gazebo.is_charging:
-            rospy.loginfo("the bot is currently docked")
+            rospy.logwarn("The bot is currently docked")
             return False
         else:
+            rospy.loginfo("The bot is docked and start charging")
             self.gazebo.set_charging(1)
             return True
 
