@@ -110,14 +110,14 @@ def baselineB(bot):
 
     #  place an obstacle before start
     # a_waypoint = bot.map_server.get_random_waypoint()
-    a_waypoint = 'l4'
+    a_waypoint = 'l3'
     loc = bot.map_server.waypoint_to_coords(a_waypoint)
     bot.gazebo.place_obstacle(loc['x'], loc['y'])
 
-    start_time = rospy.Time.now()
+    start_time = time.time()
     rospy.loginfo("A mission with {0} tasks has been launched".format(len(targets)))
     task_finished, locs = bot.go_instructions_multiple_tasks(start, targets)
-    finish_time = rospy.Time.now()
+    finish_time = time.time()
 
     mission_time_actual = finish_time - start_time
 
