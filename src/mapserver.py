@@ -17,16 +17,16 @@ class MapServer:
     def __init__(self, map_file):
         with open(map_file) as map:
             data = json.load(map)
-            self.waypoint_list = data["map"]
-            self.waypoint_idx = {}
-            for i in range(len(self.waypoint_list)):
-                self.waypoint_idx[self.waypoint_list[i]['node-id']] = i
+        self.waypoint_list = data["map"]
+        self.waypoint_idx = {}
+        for i in range(len(self.waypoint_list)):
+            self.waypoint_idx[self.waypoint_list[i]['node-id']] = i
 
-            if 'stations' in data:
-                self.stations = data["stations"]
+        if 'stations' in data:
+            self.stations = data["stations"]
 
-            self.adj_matrix = self.get_adjacency_matrix()
-            self.waypoints = self.get_waypoints()
+        self.adj_matrix = self.get_adjacency_matrix()
+        self.waypoints = self.get_waypoints()
 
     def waypoint_to_coords(self, waypoint_id):
         """ given a way point, produce its coordinates """

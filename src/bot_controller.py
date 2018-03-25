@@ -7,10 +7,14 @@ import math
 from mapserver import MapServer
 from instructions_db import InstructionDB
 from bot_interface import ControlInterface
+from configuration_db import ConfigurationDB
 import rospy
+
 
 map_file = os.path.expanduser("~/catkin_ws/src/cp1_base/maps/cp1_map.json")
 instructions_db_file = os.path.expanduser("~/catkin_ws/src/cp1_base/instructions/instructions-all.json")
+config_list = os.path.expanduser("~/cp1/config/config_list.json")
+
 sleep_interval = 5
 distance_threshold = 1
 
@@ -25,6 +29,7 @@ class BotController:
         self.map_server = MapServer(map_file)
         self.instruction_server = InstructionDB(instructions_db_file)
         self.gazebo = ControlInterface()
+        self.config_server = ConfigurationDB(config_list)
 
     def go_without_instructions(self, target):
         """bot goes directly from start to the target using move base
@@ -46,6 +51,12 @@ class BotController:
         res = self.gazebo.move_to_point(target_coords['x'], target_coords['y'])
 
         return res
+
+    def update_speed(self, igcode):
+        """updates the speed in the instruction based on the current configuration of the robot,
+        note the way how configuration affect speed as a proxy in cp1"""
+        current_config = self.gazebo.get_current_configuration(current_or_historical=True)
+
 
     def go_instructions(self, start, target):
         """bot execute the instructions and goes from start to the target with the directions instructed by the igcode

@@ -10,7 +10,7 @@ class InstructionDB:
     def __init__(self, instruction_db):
         with open(instruction_db) as db:
             data = json.load(db)
-            self.db = data
+        self.db = data
 
     def __form_key(self, wp_src, wp_tgt):
         key = "%s_to_%s" % (wp_src, wp_tgt)

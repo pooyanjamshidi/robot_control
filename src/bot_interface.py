@@ -25,6 +25,8 @@ from kobuki_msgs.msg import MotorPower
 
 # importing battery services
 from brass_gazebo_battery.srv import *
+# importing configuration manager services
+from brass_gazebo_config_manager.srv import *
 
 # parameters and global variables
 ros_node = '/battery_monitor_client'
@@ -77,6 +79,7 @@ class ControlInterface:
         self.set_charge_rate_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charge_rate', SetChargingRate)
         self.set_charge_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charge', SetCharge)
         self.set_powerload_srv = rospy.ServiceProxy(ros_node + model_name + '/set_power_load', SetLoad)
+        self.get_configuration_srv = rospy.ServiceProxy(ros_node + model_name + '/get_robot_configuration', GetConfig)
 
         # AMCL topic
         self.amcl = rospy.Publisher('initialpose', PoseWithCovarianceStamped, queue_size=10, latch=True)
@@ -100,6 +103,9 @@ class ControlInterface:
         self.lock = Lock()
 
         self.battery_previous_update = self.battery_charge
+
+        # default configuration is zero id
+        self.current_config = 0
 
     def read_conf(self):
 
@@ -250,6 +256,10 @@ class ControlInterface:
         except rospy.ServiceException as se:
             rospy.logerr("Error happened while getting bot position: %s", se)
             return None, None, None, None
+
+    def get_current_configuration(self, current_or_historical):
+        self.current_config = self.get_configuration_srv(current_or_historical)
+        return self.current_config
 
     def set_charging(self, charging):
         self.is_charging = charging
