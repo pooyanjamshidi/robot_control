@@ -9,7 +9,9 @@ class ConfigurationDB:
         self.db = data['configurations']
 
     def get_power_load(self, conf_id):
-        pass
+        config = filter(lambda conf: conf['config_id'] == conf_id, self.db)
+        return config['power_load_w']
 
     def get_speed(self, conf_id):
-        pass
+        config = filter(lambda conf: conf['config_id'] == conf_id, self.db)
+        return config['speed']
