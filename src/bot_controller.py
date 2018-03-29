@@ -9,6 +9,7 @@ from instructions_db import InstructionDB
 from bot_interface import ControlInterface
 from configuration_db import ConfigurationDB
 import rospy
+import re
 
 
 map_file = os.path.expanduser("~/catkin_ws/src/cp1_base/maps/cp1_map.json")
@@ -56,7 +57,13 @@ class BotController:
         """updates the speed in the instruction based on the current configuration of the robot,
         note the way how configuration affect speed as a proxy in cp1"""
         current_config = self.gazebo.get_current_configuration(current_or_historical=True)
+        s = self.config_server.get_speed(current_config)
+        matches = re.findall('\d+\.\d+,', igcode)
+        igcode_updated = igcode
+        for match in matches:
+            igcode_updated = re.sub(match[0:-1], s, igcode_updated)
 
+        return igcode_updated
 
     def go_instructions(self, start, target):
         """bot execute the instructions and goes from start to the target with the directions instructed by the igcode
@@ -79,9 +86,10 @@ class BotController:
         # start_coords = self.map_server.waypoint_to_coords(start)
         # self.gazebo.set_bot_position(start_coords['x'], start_coords['y'], w)
 
-        # get the instruction code and execute it
+        # get the instruction code, update the speed based on current configuration and execute it
         igcode = self.instruction_server.get_instructions(start, target)
-        res = self.gazebo.move_bot_with_igcode(igcode)
+        updated_igcode = self.update_speed(igcode=igcode)
+        res = self.gazebo.move_bot_with_igcode(updated_igcode)
 
         return res
 
