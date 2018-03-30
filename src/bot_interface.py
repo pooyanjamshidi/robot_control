@@ -80,6 +80,7 @@ class ControlInterface:
         self.set_charge_srv = rospy.ServiceProxy(ros_node + model_name + '/set_charge', SetCharge)
         self.set_powerload_srv = rospy.ServiceProxy(ros_node + model_name + '/set_power_load', SetLoad)
         self.get_configuration_srv = rospy.ServiceProxy(ros_node + model_name + '/get_robot_configuration', GetConfig)
+        self.set_configuration_srv = rospy.ServiceProxy(ros_node + model_name + '/set_robot_configuration', SetConfig)
 
         # AMCL topic
         self.amcl = rospy.Publisher('initialpose', PoseWithCovarianceStamped, queue_size=10, latch=True)
@@ -261,6 +262,12 @@ class ControlInterface:
         res = self.get_configuration_srv(current_or_historical)
         self.current_config = res.result
         return self.current_config
+
+    def set_current_configuration(self, config_id):
+        res = self.set_configuration_srv(config_id)
+        if res:
+            self.current_config = config_id
+        return res
 
     def set_charging(self, charging):
         self.is_charging = charging
