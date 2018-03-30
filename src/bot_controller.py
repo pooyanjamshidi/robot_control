@@ -57,11 +57,10 @@ class BotController:
         """updates the speed in the instruction based on the current configuration of the robot,
         note the way how configuration affect speed as a proxy in cp1"""
         current_config = self.gazebo.get_current_configuration(current_or_historical=True)
-        s = self.config_server.get_speed(current_config)
-        matches = re.findall('\d+\.\d+,', igcode)
-        igcode_updated = igcode
-        for match in matches:
-            igcode_updated = re.sub(match[0:-1], s, igcode_updated)
+        new_speed = self.config_server.get_speed(current_config)
+        matches = re.findall('MoveAbsH\(([-+]?\d*\.\d+), ([-+]?\d*\.\d+|\d+), ([-+]?\d*\.\d+|\d+)', igcode)
+        # replace the third value in MoveAbsH with the new speed value
+        igcode_updated = igcode.replace(matches[0][2], str(new_speed))
 
         return igcode_updated
 
@@ -88,6 +87,7 @@ class BotController:
 
         # get the instruction code, update the speed based on current configuration and execute it
         igcode = self.instruction_server.get_instructions(start, target)
+        # update the speed to reflect the influence of configuration
         updated_igcode = self.update_speed(igcode=igcode)
         res = self.gazebo.move_bot_with_igcode(updated_igcode)
 

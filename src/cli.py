@@ -66,7 +66,7 @@ def baselineA(bot):
     bot.gazebo.track_battery_charge()
 
     #  sleep for few sec to bring up gazebo process properly
-    sleep(20)
+    sleep(10)
 
     # put the robot at the start position
     start_coords = bot.map_server.waypoint_to_coords(start)
@@ -100,7 +100,7 @@ def baselineB(bot):
     bot.gazebo.track_battery_charge()
 
     #  sleep for few sec to bring up gazebo process properly
-    sleep(20)
+    sleep(10)
 
     # put the robot at the start position
     start_coords = bot.map_server.waypoint_to_coords(start)

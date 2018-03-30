@@ -258,7 +258,8 @@ class ControlInterface:
             return None, None, None, None
 
     def get_current_configuration(self, current_or_historical):
-        self.current_config = self.get_configuration_srv(current_or_historical)
+        res = self.get_configuration_srv(current_or_historical)
+        self.current_config = res.result
         return self.current_config
 
     def set_charging(self, charging):
