@@ -4,8 +4,8 @@ import json
 class ConfigurationDB:
 
     def __init__(self, conf_db):
-        with open(conf_db) as config_file:
-            data = json.load(config_file)
+        with open(conf_db) as db:
+            data = json.load(db)
         self.db = data['configurations']
 
     def get_power_load(self, conf_id):

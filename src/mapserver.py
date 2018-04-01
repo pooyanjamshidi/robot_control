@@ -15,8 +15,8 @@ def distance(loc1, loc2):
 class MapServer:
 
     def __init__(self, map_file):
-        with open(map_file) as map:
-            data = json.load(map)
+        with open(map_file) as db:
+            data = json.load(db)
         self.waypoint_list = data["map"]
         self.waypoint_idx = {}
         for i in range(len(self.waypoint_list)):

@@ -15,6 +15,7 @@ import re
 map_file = os.path.expanduser("~/catkin_ws/src/cp1_base/maps/cp1_map.json")
 instructions_db_file = os.path.expanduser("~/catkin_ws/src/cp1_base/instructions/instructions-all.json")
 config_list = os.path.expanduser("~/cp1/config/config_list.json")
+world_file = os.path.expanduser("~/catkin_ws/src/cp1_base/worlds/p2-cp1-1.world")
 
 sleep_interval = 5
 distance_threshold = 1
@@ -192,4 +193,13 @@ class BotController:
     def update_bot_configuration(self):
         """updates the gazebo bot configuration and the power consumption in one place"""
         pass
+
+    def find_conservative_configuration(self):
+        """finds a configuration under which the robot can reach to the closest charging station"""
+        pass
+
+    def can_bot_reach_charging(self, bot_loc, charge_level, power_load):
+        """use the power model to check whether the robot low on battery can reach the closest charging station"""
+        pass
+
 
