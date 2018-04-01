@@ -8,6 +8,7 @@ from mapserver import MapServer
 from instructions_db import InstructionDB
 from bot_interface import ControlInterface
 from configuration_db import ConfigurationDB
+from battery_db import BatteryDB
 import rospy
 import re
 
@@ -16,6 +17,7 @@ map_file = os.path.expanduser("~/catkin_ws/src/cp1_base/maps/cp1_map.json")
 instructions_db_file = os.path.expanduser("~/catkin_ws/src/cp1_base/instructions/instructions-all.json")
 config_list = os.path.expanduser("~/cp1/config/config_list.json")
 world_file = os.path.expanduser("~/catkin_ws/src/cp1_base/worlds/p2-cp1-1.world")
+battery_name = "brass_battery"
 
 sleep_interval = 5
 distance_threshold = 1
@@ -32,6 +34,7 @@ class BotController:
         self.instruction_server = InstructionDB(instructions_db_file)
         self.gazebo = ControlInterface()
         self.config_server = ConfigurationDB(config_list)
+        self.robot_battery = BatteryDB(world_file, battery_name=battery_name)
 
     def go_without_instructions(self, target):
         """bot goes directly from start to the target using move base
@@ -198,8 +201,27 @@ class BotController:
         """finds a configuration under which the robot can reach to the closest charging station"""
         pass
 
-    def can_bot_reach_charging(self, bot_loc, charge_level, power_load):
+    def can_bot_reach_charging(self, bot_loc):
         """use the power model to check whether the robot low on battery can reach the closest charging station"""
-        pass
+        charge_level = self.gazebo.battery_charge
+        power_load = self.config_server.get_power_load(self.gazebo.current_config)
+        dischagre_time = self.robot_battery.time_to_fully_discharge(charge_level, power_load)
+
+        current_speed = self.config_server.get_speed(self.gazebo.current_config)
+        current_waypoint = self.map_server.coords_to_waypoint(bot_loc)['id']
+        path_to_charging = self.map_server.closest_charging_station(current_waypoint)
+        charging_id = path_to_charging[-1]
+        charging_loc = self.map_server.waypoint_to_coords(charging_id)
+        dist_to_charging = distance(bot_loc, charging_loc)
+        time_to_charging = dist_to_charging / current_speed
+
+        if dischagre_time >= time_to_charging:
+            return True
+        else:
+            return False
+
+
+
+
 
 
