@@ -65,7 +65,7 @@ def status_translator(status):
 
 class ControlInterface:
 
-    def __init__(self):
+    def __init__(self, default_config):
 
         # standard Gazebo services
         self.get_model_state = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
@@ -106,7 +106,7 @@ class ControlInterface:
         self.battery_previous_update = self.battery_charge
 
         # default configuration is zero id
-        self.current_config = 0
+        self.current_config = default_config
 
     def read_conf(self):
 

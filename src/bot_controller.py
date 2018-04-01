@@ -32,9 +32,9 @@ class BotController:
     def __init__(self):
         self.map_server = MapServer(map_file)
         self.instruction_server = InstructionDB(instructions_db_file)
-        self.gazebo = ControlInterface()
         self.config_server = ConfigurationDB(config_list)
         self.robot_battery = BatteryDB(world_file, battery_name=battery_name)
+        self.gazebo = ControlInterface(self.config_server.get_default_config())
 
     def go_without_instructions(self, target):
         """bot goes directly from start to the target using move base
@@ -201,6 +201,7 @@ class BotController:
         """finds a configuration under which the robot can reach to the closest charging station"""
         pass
 
+
     def can_bot_reach_charging(self, bot_loc):
         """use the power model to check whether the robot low on battery can reach the closest charging station"""
         charge_level = self.gazebo.battery_charge
@@ -212,7 +213,7 @@ class BotController:
         path_to_charging = self.map_server.closest_charging_station(current_waypoint)
         charging_id = path_to_charging[-1]
         charging_loc = self.map_server.waypoint_to_coords(charging_id)
-        dist_to_charging = distance(bot_loc, charging_loc)
+        dist_to_charging = distance([bot_loc['x'], bot_loc['y']], [charging_loc['x'], charging_loc['y']])
         time_to_charging = dist_to_charging / current_speed
 
         if dischagre_time >= time_to_charging:
