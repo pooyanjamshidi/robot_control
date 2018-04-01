@@ -11,14 +11,15 @@ from configuration_db import ConfigurationDB
 from battery_db import BatteryDB
 import rospy
 import re
+from constants import AdaptationLevel
 
 
 map_file = os.path.expanduser("~/catkin_ws/src/cp1_base/maps/cp1_map.json")
 instructions_db_file = os.path.expanduser("~/catkin_ws/src/cp1_base/instructions/instructions-all.json")
 config_list = os.path.expanduser("~/cp1/config/config_list.json")
 world_file = os.path.expanduser("~/catkin_ws/src/cp1_base/worlds/p2-cp1-1.world")
-battery_name = "brass_battery"
 
+battery_name = "brass_battery"
 sleep_interval = 5
 distance_threshold = 1
 
@@ -29,12 +30,13 @@ def distance(loc1, loc2):
 
 class BotController:
 
-    def __init__(self):
+    def __init__(self, adaptation_level):
         self.map_server = MapServer(map_file)
         self.instruction_server = InstructionDB(instructions_db_file)
         self.config_server = ConfigurationDB(config_list)
         self.robot_battery = BatteryDB(world_file, battery_name=battery_name)
         self.gazebo = ControlInterface(self.config_server.get_default_config())
+        self.adaptation_level = adaptation_level
 
     def go_without_instructions(self, target):
         """bot goes directly from start to the target using move base
@@ -130,6 +132,8 @@ class BotController:
                 number_of_tasks_accomplished += 1
 
             if self.gazebo.is_battery_low:
+                # check whether an adaptation (e.g., change of configuration) is needed
+                self.adapt()
                 bot_state = self.gazebo.get_bot_state()
                 loc = {"x": bot_state[0], "y": bot_state[1]}
                 res, charging_id = self.go_charging(loc)
@@ -141,6 +145,15 @@ class BotController:
                 start = charging_id
 
         return number_of_tasks_accomplished, locs
+
+    def adapt(self):
+        """adaptation factory"""
+        if self.adaptation_level == AdaptationLevel.Reactive:
+            self.change_config_to_conservative()
+
+    def change_config_to_conservative(self):
+        conservative_config = self.config_server.get_a_conservative_config()
+        self.gazebo.set_current_configuration(config_id=conservative_config)
 
     def go_charging(self, current_loc):
         """bot goes to the closest charging station from the current waypoint it is on"""
@@ -196,11 +209,6 @@ class BotController:
     def update_bot_configuration(self):
         """updates the gazebo bot configuration and the power consumption in one place"""
         pass
-
-    def find_conservative_configuration(self):
-        """finds a configuration under which the robot can reach to the closest charging station"""
-        pass
-
 
     def can_bot_reach_charging(self, bot_loc):
         """use the power model to check whether the robot low on battery can reach the closest charging station"""

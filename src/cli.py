@@ -14,6 +14,7 @@ import rospy
 from roslaunch import rlutil, parent
 import roslaunch
 from bot_controller import BotController
+from constants import AdaptationLevel
 
 commands = ["baseline_a", "baseline_b", "baseline_c", "place_obstacle", "remove_obstacle"]
 rosnode = "cp1_node"
@@ -145,7 +146,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=commands, help='The command to issue to Gazebo')
-    bot = BotController()
+    bot = BotController(AdaptationLevel.Reactive)
 
     args = parser.parse_args()
 
