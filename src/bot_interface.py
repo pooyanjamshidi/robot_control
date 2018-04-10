@@ -35,12 +35,10 @@ map_name = 'map'
 max_waiting_time = 100
 
 # the threshold below which the bot will go to the charging station
-battery_low_threshold = 0.90
+battery_low_threshold = 0.10
 
 conf_file = '../conf/conf.json'
 
-default_configuration_id = 0
-default_power_load = 10
 
 # This is the model for the obstacle
 obstacle = os.path.expanduser('~/catkin_ws/src/cp1_base/models/box')
@@ -87,6 +85,7 @@ class ControlInterface:
 
         self.battery_charge = -1
         self.battery_capacity = 1.2009
+        self.charge_rate = 0
         self.is_charging = False
         self.is_battery_low = False
 

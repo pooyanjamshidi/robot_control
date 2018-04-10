@@ -38,6 +38,13 @@ class BotController:
         self.gazebo = ControlInterface(self.config_server.get_default_config())
         self.adaptation_level = adaptation_level
 
+        # robot initialization including the battery, etc
+        self.init_robot()
+
+    def init_robot(self):
+        self.gazebo.battery_capacity = self.robot_battery.capacity
+        self.gazebo.charge_rate = self.robot_battery.charge_rate
+
     def go_without_instructions(self, target):
         """bot goes directly from start to the target using move base
 
@@ -132,10 +139,13 @@ class BotController:
                 number_of_tasks_accomplished += 1
 
             if self.gazebo.is_battery_low:
-                # check whether an adaptation (e.g., change of configuration) is needed
-                self.adapt()
                 bot_state = self.gazebo.get_bot_state()
                 loc = {"x": bot_state[0], "y": bot_state[1]}
+
+                # check whether an adaptation (e.g., change of configuration) is needed
+                if self.can_bot_reach_charging(loc):
+                    self.adapt()
+
                 res, charging_id = self.go_charging(loc)
                 while not res:
                     res, charging_id = self.go_charging(loc)
@@ -210,21 +220,25 @@ class BotController:
         """updates the gazebo bot configuration and the power consumption in one place"""
         pass
 
-    def can_bot_reach_charging(self, bot_loc):
+    def can_bot_reach_charging(self, current_loc):
         """use the power model to check whether the robot low on battery can reach the closest charging station"""
         charge_level = self.gazebo.battery_charge
         power_load = self.config_server.get_power_load(self.gazebo.current_config)
         dischagre_time = self.robot_battery.time_to_fully_discharge(charge_level, power_load)
 
         current_speed = self.config_server.get_speed(self.gazebo.current_config)
-        current_waypoint = self.map_server.coords_to_waypoint(bot_loc)['id']
+        current_waypoint = self.map_server.coords_to_waypoint(current_loc)['id']
         path_to_charging = self.map_server.closest_charging_station(current_waypoint)
-        charging_id = path_to_charging[-1]
-        charging_loc = self.map_server.waypoint_to_coords(charging_id)
-        dist_to_charging = distance([bot_loc['x'], bot_loc['y']], [charging_loc['x'], charging_loc['y']])
-        time_to_charging = dist_to_charging / current_speed
 
-        if dischagre_time >= time_to_charging:
+        next_loc = self.map_server.waypoint_to_coords(path_to_charging[0])
+        dist_to_charging = distance([current_loc['x'], current_loc['y']], [next_loc['x'], next_loc['y']])
+        for waypoint in path_to_charging[1:-1]:
+            next_loc = self.map_server.waypoint_to_coords(waypoint)
+            dist_to_charging += distance([current_loc['x'], current_loc['y']], [next_loc['x'], next_loc['y']])
+            current_loc = next_loc
+        travel_time_to_charging = dist_to_charging / current_speed
+
+        if dischagre_time >= travel_time_to_charging:
             return True
         else:
             return False
