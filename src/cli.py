@@ -23,6 +23,9 @@ launch_configs = {
 }
 launch_file_path = "~/catkin_ws/src/cp1_base/launch/"
 
+ready_path = "~/ready/"
+mission_file = "cp1.json"
+
 # the starting waypoint
 start = 'l1'
 # the target waypoints
