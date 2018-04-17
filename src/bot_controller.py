@@ -23,6 +23,9 @@ battery_name = "brass_battery"
 sleep_interval = 5
 distance_threshold = 1
 
+# for Rainbow integration
+current_target_waypoint = "~/cp1/current-target-waypoint"
+
 
 def distance(loc1, loc2):
     return math.sqrt((loc1[0] - loc2[0]) ** 2 + (loc1[1] - loc2[1]) ** 2)
