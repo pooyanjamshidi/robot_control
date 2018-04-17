@@ -5,7 +5,7 @@ DONEMSG="DONE"
 
 if [ -e $FILE ]
 then
-    echo $DONEMSG >> $FILE
+    echo $DONEMSG > $FILE
 else
     echo "file does not exists"
 fi
