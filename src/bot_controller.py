@@ -159,6 +159,15 @@ class BotController:
 
         return number_of_tasks_accomplished, locs
 
+    def go_instructions_multiple_tasks_adaptive(self, start, targets):
+        """this is for baseline c where the adaptation will be taken care of with Rainbow"""
+        pass
+
+    def update_current_target_waypoint(self, current_waypoint):
+        """update a shared file to inform rainbow about current waypoint"""
+        with open(current_target_waypoint, "w+") as file:
+            file.write(current_waypoint)
+
     def adapt(self):
         """adaptation factory"""
         if self.adaptation_level == AdaptationLevel.Reactive:
