@@ -1,7 +1,7 @@
 ---
 swagger: "2.0"
 info:
-  version: "0.1"
+  version: 0.1.1
   title: CP1 Internal Status API
 host: brass-ta
 schemes:
@@ -26,7 +26,6 @@ definitions:
     type: object
     required:
     - message
-    - sim-time
     - status
     properties:
       status:
