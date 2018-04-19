@@ -2,7 +2,7 @@ import json
 from constants import AdaptationLevel
 
 
-class readyDB:
+class ReadyDB:
     def __init__(self, ready_db):
         with open(ready_db) as db:
             data = json.load(db)
@@ -20,11 +20,10 @@ class readyDB:
             return AdaptationLevel.BASELINE_C
 
     def get_power_model(self):
-        return self.db["power-model"]
+        return "model" + str(self.db["power-model"])
 
     def get_start_location(self):
         return self.db["start-loc"]
 
     def get_target_locations(self):
         return self.db["target-locs"]
-

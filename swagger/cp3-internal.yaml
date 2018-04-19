@@ -1,0 +1,55 @@
+---
+swagger: "2.0"
+info:
+  version: "0.1"
+  title: CP1 Internal Status API
+host: brass-ta
+schemes:
+- http
+paths:
+  /internal:
+    post:
+      description: reports any internal status (including the error that may occured) from the backend that might be sent to the TA for internal bookeeping or forwarding to the TH
+      parameters:
+      - in: body
+        name: CP1InternalStatus
+        required: true
+        schema:
+          $ref: '#/definitions/CP1InternalStatus'
+      responses:
+        200:
+          description: TA acknowledges the status of the SUT
+        400:
+          description: TA has encountered an error in processing the status of the SUT
+definitions:
+  CP1InternalStatus:
+    type: object
+    required:
+    - message
+    - sim-time
+    - status
+    properties:
+      status:
+        type: string
+        description: one of the possible status codes * learning-started - the learning phase has started * learning-done - the learning phase has been * adapt-started - the SUT has started adapting and cannot be perturbed * adapt-done - the SUT has finished adapting * charging-started - the turtlebot is currently charging * charging-done - the turtlebot has stopped charging * parsing-error - one or more of the function descriptions failed to parse * learning-error - an error was encountered in learning one or more of the hidden functions * other-error - an error was encountered that is not covered by the other error codees
+        enum:
+        - learning-started
+        - learning-done
+        - adapt-started
+        - adapt-done
+        - charging-started
+        - charging-done
+        - parsing-error
+        - learning-error
+        - other-error
+      message:
+        type: string
+        description: human readable text describing the status, if any
+      sim-time:
+        type: integer
+        description: the simulation time the status message was produced, for some siutations like learning-* we do not have simulation time because the simulation has not been started
+        minimum: 0
+    example:
+      sim-time: 0
+      message: message
+      status: learning-started
