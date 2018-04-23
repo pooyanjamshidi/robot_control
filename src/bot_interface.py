@@ -198,6 +198,10 @@ class ControlInterface:
             rospy.loginfo("could not execute the instructions")
             return False
 
+    def send_instructions(self, igcode):
+        goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
+        self.ig_client.send_goal(goal=goal)
+
     def set_bot_position(self, x, y, w):
 
         try:
@@ -284,13 +288,15 @@ class ControlInterface:
     def get_charge(self, msg):
         self.battery_charge = msg.data
         #  determine whether the battery is low or not
-        if self.battery_charge < battery_low_threshold:
+        if self.battery_charge < battery_low_threshold * self.battery_capacity:
             self.is_battery_low = True
         else:
             self.is_battery_low = False
 
         if abs(self.battery_charge - self.battery_previous_update) > self.battery_capacity*0.01:
             rospy.loginfo("Battery charge: {0}Ah".format(self.battery_charge))
+            if self.is_battery_low:
+                rospy.logwarn("Battery level is low")
             self.battery_previous_update = self.battery_charge
 
     def monitor_battery(self):

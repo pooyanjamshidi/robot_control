@@ -24,7 +24,8 @@ sleep_interval = 5
 distance_threshold = 1
 
 # for Rainbow integration
-current_target_waypoint = "~/cp1/current-target-waypoint"
+current_target_waypoint = os.path.expanduser("~/cp1/current-target-waypoint")
+current_task_finished = os.path.expanduser("~/cp1/current-task-finished")
 
 
 def distance(loc1, loc2):
@@ -33,13 +34,12 @@ def distance(loc1, loc2):
 
 class BotController:
 
-    def __init__(self, adaptation_level):
+    def __init__(self):
         self.map_server = MapServer(map_file)
         self.instruction_server = InstructionDB(instructions_db_file)
         self.config_server = ConfigurationDB(config_list)
         self.robot_battery = BatteryDB(world_file, battery_name=battery_name)
         self.gazebo = ControlInterface(self.config_server.get_default_config())
-        self.adaptation_level = adaptation_level
 
         # robot initialization including the battery, etc
         self.init_robot()
@@ -80,11 +80,12 @@ class BotController:
 
         return igcode_updated
 
-    def go_instructions(self, start, target):
+    def go_instructions(self, start, target, wait=True):
         """bot execute the instructions and goes from start to the target with the directions instructed by the igcode
 
         :param start: start waypoint id
         :param target: target waypoint id
+        :param wait:
         :return:
         """
 
@@ -105,11 +106,14 @@ class BotController:
         igcode = self.instruction_server.get_instructions(start, target)
         # update the speed to reflect the influence of configuration
         updated_igcode = self.update_speed(igcode=igcode)
-        res = self.gazebo.move_bot_with_igcode(updated_igcode)
+        if wait:
+            res = self.gazebo.move_bot_with_igcode(updated_igcode)
+            return res
+        else:
+            self.gazebo.send_instructions(igcode=igcode)
+            return True
 
-        return res
-
-    def go_instructions_multiple_tasks(self, start, targets):
+    def go_instructions_multiple_tasks_reactive(self, start, targets):
         """the same version of go_instructions but for multiple tasks for cp1
 
         :param start:
@@ -146,8 +150,8 @@ class BotController:
                 loc = {"x": bot_state[0], "y": bot_state[1]}
 
                 # check whether an adaptation (e.g., change of configuration) is needed
-                if self.can_bot_reach_charging(loc):
-                    self.adapt()
+                # if self.can_bot_reach_charging(loc):
+                #     self.adapt(AdaptationLevel.BASELINE_C)
 
                 res, charging_id = self.go_charging(loc)
                 while not res:
@@ -161,16 +165,56 @@ class BotController:
 
     def go_instructions_multiple_tasks_adaptive(self, start, targets):
         """this is for baseline c where the adaptation will be taken care of with Rainbow"""
-        pass
+
+        number_of_tasks_accomplished = 0
+        locs = []
+
+        for target in targets:
+            current_start = start
+            self.update_current_target_waypoint(current_waypoint=current_start)
+            self.go_instructions(current_start, target, wait=False)
+
+            success = self.wait_until_rainbow_is_done()
+
+            x, y, w, v = self.gazebo.get_bot_state()
+            loc_target = self.map_server.waypoint_to_coords(target)
+
+            #  check robot distance to the target, if it is not then
+            d = distance([x, y], [loc_target['x'], loc_target['y']])
+            if d > distance_threshold and success:
+                rospy.logwarn(
+                    "The robot is not close enough to the expected target, so we do not count this task done!")
+                start = target
+                success = False
+
+            locs.append({"start": current_start, "target": target, "x": x, "y": y, "task_accomplished": success,
+                         "dist_to_target": d})
+
+            if success:
+                rospy.loginfo("A new task ({0}->{1}) has been accomplished".format(current_start, target))
+                start = target
+                number_of_tasks_accomplished += 1
+
+    def wait_until_rainbow_is_done(self):
+        """Rainbow should indicate when it thinks it is done with the task"""
+        while True:
+            with open(current_task_finished, "r") as file:
+                res = file.read()
+                if res == "DONE":
+                    return True
+                elif res == "FAILED":
+                    return False
+                else:
+                    time.sleep(sleep_interval)
 
     def update_current_target_waypoint(self, current_waypoint):
         """update a shared file to inform rainbow about current waypoint"""
         with open(current_target_waypoint, "w+") as file:
             file.write(current_waypoint)
 
-    def adapt(self):
+    def adapt(self, adaptation_level):
         """adaptation factory"""
-        if self.adaptation_level == AdaptationLevel.Reactive:
+        if adaptation_level == AdaptationLevel.BASELINE_C:
             self.change_config_to_conservative()
 
     def change_config_to_conservative(self):
@@ -179,7 +223,7 @@ class BotController:
 
     def go_charging(self, current_loc):
         """bot goes to the closest charging station from the current waypoint it is on"""
-        rospy.logwarn("The battery is low and the bot is now heading to the nearest charging station")
+        rospy.logwarn("The bot is now heading to the nearest charging station")
         current_waypoint = self.map_server.coords_to_waypoint(current_loc)['id']
         path_to_charging = self.map_server.closest_charging_station(current_waypoint)
         charging_id = path_to_charging[-1]

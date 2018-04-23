@@ -79,7 +79,7 @@ def baselineA(bot):
 
     start_time = time.time()
     rospy.loginfo("A mission with {0} tasks has been launched".format(len(targets)))
-    task_finished, locs = bot.go_instructions_multiple_tasks(start, targets)
+    task_finished, locs = bot.go_instructions_multiple_tasks_reactive(start, targets)
     finish_time = time.time()
 
     mission_time_actual = finish_time - start_time
@@ -119,7 +119,7 @@ def baselineB(bot):
 
     start_time = time.time()
     rospy.loginfo("A mission with {0} tasks has been launched".format(len(targets)))
-    task_finished, locs = bot.go_instructions_multiple_tasks(start, targets)
+    task_finished, locs = bot.go_instructions_multiple_tasks_reactive(start, targets)
     finish_time = time.time()
 
     mission_time_actual = finish_time - start_time
@@ -148,7 +148,7 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=commands, help='The command to issue to Gazebo')
-    bot = BotController(AdaptationLevel.Reactive)
+    bot = BotController()
 
     args = parser.parse_args()
 
