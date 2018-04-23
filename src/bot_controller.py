@@ -16,7 +16,7 @@ from constants import AdaptationLevel
 
 map_file = os.path.expanduser("~/catkin_ws/src/cp1_base/maps/cp1_map.json")
 instructions_db_file = os.path.expanduser("~/catkin_ws/src/cp1_base/instructions/instructions-all.json")
-config_list = os.path.expanduser("~/cp1/config/config_list_true.json")
+config_list = os.path.expanduser("~/cp1/config_list_true.json")
 world_file = os.path.expanduser("~/catkin_ws/src/cp1_base/worlds/p2-cp1-1.world")
 
 battery_name = "brass_battery"

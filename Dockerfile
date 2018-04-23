@@ -11,4 +11,6 @@ ENV PYTHON_VERSION=3.6.4
 RUN sudo apt-get install -y python3
 RUN sudo apt-get install -y python3-pip
 
+RUN sudo pip3 install catkin_pkg rospkg numpy psutil
+
 CMD ["/bin/bash"]

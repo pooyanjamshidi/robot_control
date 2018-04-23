@@ -17,7 +17,7 @@ from bot_controller import BotController
 from constants import AdaptationLevel
 from ready_db import ReadyDB
 
-commands = ["place_obstacle", "remove_obstacle", "set_charge", "execute_task", "launch", "stop"]
+commands = ["place_obstacle", "remove_obstacle", "set_charge", "execute_task", "stop"]
 
 rosnode = "cp1_node"
 launch_configs = {
@@ -58,10 +58,17 @@ def graceful_stop():
 
 
 def main():
-    launch = None
     # bring up a ros node
     init(rosnode)
     bot = BotController()
+
+    launch = launch_cp1_base('default')
+
+    # track battery charge
+    bot.gazebo.track_battery_charge()
+
+    #  sleep for few sec to bring up gazebo process properly
+    sleep(30)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=commands, help='The command to issue to Gazebo')
@@ -81,13 +88,15 @@ def main():
 
     if args.command == "execute_task":
         pargs = et_parser.parse_args(extras)
+
+        # put the robot at the start position
+        start_coords = bot.map_server.waypoint_to_coords(pargs.start)
+        bot.gazebo.set_bot_position(start_coords['x'], start_coords['y'], 0)
+
         task_finished, locs = bot.go_instructions_multiple_tasks_adaptive(pargs.start, [pargs.target])
 
     elif args.command == "stop":
         stop(launch)
-
-    elif args.command == "launch":
-        launch = launch_cp1_base('default')
 
     elif args.command == "set_charge":
         pargs = sc_parser.parse_args(extras)
