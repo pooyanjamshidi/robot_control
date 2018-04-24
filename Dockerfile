@@ -9,6 +9,7 @@ COPY requirements.txt src/cp1_controllers/
 RUN git clone https://github.com/cmu-mars/model-learner.git src/model-learner
 
 RUN sudo chown -R $(whoami):$(whoami) .
+RUN sudo chown -R $(whoami):$(whoami) ../cp1/
 
 RUN sudo apt-get install -y python-pip
 
