@@ -171,7 +171,7 @@ class BotController:
 
         for target in targets:
             current_start = start
-            self.update_current_target_waypoint_and_resetting_previous(current_waypoint=current_start)
+            self.update_current_target_waypoint_and_resetting_previous(current_waypoint=target)
             self.go_instructions(current_start, target, wait=False)
 
             success = self.wait_until_rainbow_is_done()
@@ -194,6 +194,8 @@ class BotController:
                 rospy.loginfo("A new task ({0}->{1}) has been accomplished".format(current_start, target))
                 start = target
                 number_of_tasks_accomplished += 1
+
+        return number_of_tasks_accomplished, locs
 
     def wait_until_rainbow_is_done(self):
         """Rainbow should indicate when it thinks it is done with the task"""
