@@ -45,7 +45,7 @@ obstacle = os.path.expanduser('~/catkin_ws/src/cp1_base/models/box')
 # Here we manage the world, bot, and control interface
 
 def status_translator(status):
-    if 0: print ''
+    if 0: print('')
     elif status == GoalStatus.PENDING   : state='PENDING'
     elif status == GoalStatus.ACTIVE    : state='ACTIVE'
     elif status == GoalStatus.PREEMPTED : state='PREEMPTED'
