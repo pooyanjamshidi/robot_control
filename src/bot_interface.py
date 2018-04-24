@@ -320,13 +320,15 @@ class ControlInterface:
         rospy.loginfo("Plan is active!")
 
     def done_cb(self, status, result):
-        if status == GoalStatus.SUCCEEDED:
-            rospy.loginfo("done_cb: Task succeeded!")
-            # emulating rainbow, will need to remove later
-            # subprocess.call("current-task-finished.sh 1", shell=True)
-        else:
-            rospy.logwarn("done_cb: Unhandled Action response: {0}".format(status_translator(status)))
-            # subprocess.call("current-task-finished.sh 0", shell=True)
+        # TODO: check this callback to see whether we are getting the right status
+        pass
+        # if status == GoalStatus.SUCCEEDED:
+        #     rospy.loginfo("done_cb: Task succeeded!")
+        #     # emulating rainbow, will need to remove later
+        #     # subprocess.call("current-task-finished.sh 1", shell=True)
+        # else:
+        #     rospy.logwarn("done_cb: Unhandled Action response: {0}".format(status_translator(status)))
+        #     # subprocess.call("current-task-finished.sh 0", shell=True)
 
     def feedback_cb(self, feedback):
         # first get the latest charge and then determine whether the bot should abort the task
