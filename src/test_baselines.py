@@ -191,11 +191,7 @@ def main():
     # bring up a ros node
     init(rosnode)
 
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("command", choices=commands, help='The command to issue to Gazebo')
     bot = BotController()
-
-    # args = parser.parse_args()
 
     if baseline == AdaptationLevel.BASELINE_A:
         baselineA(bot, start, targets)
@@ -205,18 +201,6 @@ def main():
 
     elif baseline == AdaptationLevel.BASELINE_C:
         baselineC(bot, start, targets)
-
-    # elif args.command == "place_obstacle":
-    #     # get the current position of the bot and place an obstacle in front few meters away
-    #     x, y, w, v = bot.gazebo.get_bot_state()
-    #     loc1, loc2 = bot.map_server.get_two_closest_waypoints(x, y)
-    #     bot.gazebo.place_obstacle(loc1['x'], loc1['y'])
-    #     bot.gazebo.place_obstacle(loc2['x'], loc2['y'])
-    #
-    # elif args.command == "remove_obstacle":
-    #     obstacles = bot.gazebo.obstacles
-    #     for obstacle in obstacles:
-    #         bot.gazebo.remove_obstacle(obstacle)
 
 
 if __name__ == '__main__':

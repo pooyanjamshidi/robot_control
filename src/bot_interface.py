@@ -1,9 +1,7 @@
 #! /usr/bin/env python
 
-import traceback
 import math
 import json
-import numpy
 from threading import Lock
 import os
 
@@ -106,6 +104,13 @@ class ControlInterface:
 
         # default configuration is zero id
         self.current_config = default_config
+        self.connect_to_gazebo(timeout=30)
+
+    def connect_to_gazebo(self, timeout):
+        try:
+            rospy.wait_for_service('/gazebo/get_model_state', timeout=timeout)
+        except rospy.ROSException as e:
+            raise rospy.logerr("Could not connect to gazebo", e)
 
     def read_conf(self):
 
@@ -364,11 +369,11 @@ class ControlInterface:
             rospy.logerr("Could not place obstacle. Message {0}".format(e))
             return None
 
-    def remove_obstacle(self, obstacle_name):
+    def remove_obstacle(self, obstacle_name, check=True):
         """similar to phase 1"""
 
         with self.lock:
-            if obstacle_name not in self.obstacles:
+            if check and obstacle_name not in self.obstacles:
                 rospy.logerr('The obstacle could not find in the world: {0}'.format(obstacle_name))
                 return False
 
@@ -378,16 +383,17 @@ class ControlInterface:
             res = self.delete_model(req)
 
             if res.success:
-                with self.lock:
-                    self.obstacles.remove(obstacle_name)
+                if check:
+                    with self.lock:
+                        self.obstacles.remove(obstacle_name)
 
                 return True
             else:
                 rospy.logerr("Could not remove obstacle. Message: {0}".format(res.status_message))
-                return None
+                return False
         except rospy.ServiceException as e:
             rospy.logerr("Could not place obstacle. Message {0}".format(e))
-            return None
+            return False
 
 
 def main():
