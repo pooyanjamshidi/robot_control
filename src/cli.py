@@ -76,7 +76,7 @@ def main():
 
     et_parser = argparse.ArgumentParser(prog=parser.prog + " execute_task")
     et_parser.add_argument('start', type=str, help='The starting waypoint')
-    et_parser.add_argument('target', type=str, help='The target waypoint')
+    et_parser.add_argument('target', nargs='+', type=str, help='The target waypoints')
 
     go_parser = argparse.ArgumentParser(prog=parser.prog + " go_directly")
     go_parser.add_argument('start', type=str, help='The starting waypoint')
@@ -90,8 +90,9 @@ def main():
         # put the robot at the start position
         start_coords = bot.map_server.waypoint_to_coords(pargs.start)
         bot.gazebo.set_bot_position(start_coords['x'], start_coords['y'], 0)
+        rospy.sleep(10)
 
-        task_finished, locs = bot.go_instructions_multiple_tasks_adaptive(pargs.start, [pargs.target])
+        task_finished, locs = bot.go_instructions_multiple_tasks_adaptive(pargs.start, pargs.target)
 
     elif args.command == "go_directly":
         pargs = go_parser.parse_args(extras)

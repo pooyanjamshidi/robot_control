@@ -4,6 +4,7 @@ import math
 import json
 from threading import Lock
 import os
+import subprocess
 
 # third party imports
 import rospy
@@ -205,7 +206,7 @@ class ControlInterface:
 
     def send_instructions(self, igcode):
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
-        self.ig_client.send_goal(goal=goal)
+        self.ig_client.send_goal(goal=goal, done_cb=self.done_cb)
 
     def set_bot_position(self, x, y, w):
 
@@ -321,8 +322,11 @@ class ControlInterface:
     def done_cb(self, status, result):
         if status == GoalStatus.SUCCEEDED:
             rospy.loginfo("done_cb: Task succeeded!")
+            # emulating rainbow, will need to remove later
+            # subprocess.call("current-task-finished.sh 1", shell=True)
         else:
-            rospy.logwarn("done_cb: Unhandled Action response: {}".format(status_translator(status)))
+            rospy.logwarn("done_cb: Unhandled Action response: {0}".format(status_translator(status)))
+            # subprocess.call("current-task-finished.sh 0", shell=True)
 
     def feedback_cb(self, feedback):
         # first get the latest charge and then determine whether the bot should abort the task

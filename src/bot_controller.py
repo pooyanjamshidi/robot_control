@@ -171,7 +171,7 @@ class BotController:
 
         for target in targets:
             current_start = start
-            self.update_current_target_waypoint(current_waypoint=current_start)
+            self.update_current_target_waypoint_and_resetting_previous(current_waypoint=current_start)
             self.go_instructions(current_start, target, wait=False)
 
             success = self.wait_until_rainbow_is_done()
@@ -198,19 +198,21 @@ class BotController:
     def wait_until_rainbow_is_done(self):
         """Rainbow should indicate when it thinks it is done with the task"""
         while True:
-            with open(current_task_finished, "r") as file:
-                res = file.read()
-                if res == "DONE":
-                    return True
-                elif res == "FAILED":
-                    return False
-                else:
-                    time.sleep(sleep_interval)
+            current_task_file = open(current_task_finished, "r")
+            res = current_task_file.read()
+            current_task_file.close()
+            if res == "DONE\n":
+                return True
+            elif res == "FAILED\n":
+                return False
+            else:
+                time.sleep(sleep_interval)
 
-    def update_current_target_waypoint(self, current_waypoint):
+    def update_current_target_waypoint_and_resetting_previous(self, current_waypoint):
         """update a shared file to inform rainbow about current waypoint"""
         with open(current_target_waypoint, "w+") as file:
-            file.write(current_waypoint)
+            file.write("target: \"%s\"" %current_waypoint)
+        open(current_task_finished, "w+").close()
 
     def adapt(self, adaptation_level):
         """adaptation factory"""
