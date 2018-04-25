@@ -47,6 +47,7 @@ class BotController:
     def init_robot(self):
         self.gazebo.battery_capacity = self.robot_battery.capacity
         self.gazebo.charge_rate = self.robot_battery.charge_rate
+        self.gazebo.battery_voltage = self.robot_battery.battery_voltage
 
     def go_without_instructions(self, target):
         """bot goes directly from start to the target using move base
@@ -125,8 +126,52 @@ class BotController:
 
         for target in targets:
             current_start = start
-            success = self.go_instructions(current_start, target)
-            # low_charge = self.gazebo.ig_server.new_goal_preempt_request
+            success = self.go_instructions(current_start, target, wait=True)
+
+            x, y, w, v = self.gazebo.get_bot_state()
+            loc_target = self.map_server.waypoint_to_coords(target)
+
+            #  check robot distance to the target, if it is not then
+            d = distance([x, y], [loc_target['x'], loc_target['y']])
+            if d > distance_threshold and success:
+                rospy.logwarn("The robot is not close enough to the expected target, so we do not count this task done!")
+                start = target
+                success = False
+
+            locs.append({"start": current_start, "target": target, "x": x, "y": y, "task_accomplished": success, "dist_to_target": d})
+
+            if success:
+                rospy.loginfo("A new task ({0}->{1}) has been accomplished".format(current_start, target))
+                start = target
+                number_of_tasks_accomplished += 1
+
+            if self.gazebo.is_battery_low:
+                bot_state = self.gazebo.get_bot_state()
+                loc = {"x": bot_state[0], "y": bot_state[1]}
+
+                res, charging_id = self.go_charging(loc)
+                while not res:
+                    res, charging_id = self.go_charging(loc)
+                while not self.is_fully_charged():
+                    time.sleep(sleep_interval)
+                self.undock()
+                start = charging_id
+
+        return number_of_tasks_accomplished, locs
+
+    def go_instructions_multiple_tasks_reactive_fancy(self, start, targets):
+        """the same version of reactive but with configuration adaptation
+
+        :param start:
+        :param targets:
+        :return:
+        """
+        number_of_tasks_accomplished = 0
+        locs = []
+
+        for target in targets:
+            current_start = start
+            success = self.go_instructions(current_start, target, wait=True)
 
             x, y, w, v = self.gazebo.get_bot_state()
             loc_target = self.map_server.waypoint_to_coords(target)
@@ -150,8 +195,8 @@ class BotController:
                 loc = {"x": bot_state[0], "y": bot_state[1]}
 
                 # check whether an adaptation (e.g., change of configuration) is needed
-                # if self.can_bot_reach_charging(loc):
-                #     self.adapt(AdaptationLevel.BASELINE_C)
+                if self.can_bot_reach_charging(loc):
+                    self.adapt(AdaptationLevel.BASELINE_C)
 
                 res, charging_id = self.go_charging(loc)
                 while not res:
@@ -203,11 +248,11 @@ class BotController:
         """Rainbow should indicate when it thinks it is done with the task"""
         while True:
             current_task_file = open(current_task_finished, "r")
-            res = current_task_file.read()
+            res = current_task_file.read().replace('\n', '')
             current_task_file.close()
-            if res == "DONE\n":
+            if res == "DONE":
                 return True
-            elif res == "FAILED\n":
+            elif res == "FAILED":
                 return False
             else:
                 time.sleep(sleep_interval)
@@ -304,9 +349,3 @@ class BotController:
             return True
         else:
             return False
-
-
-
-
-
-

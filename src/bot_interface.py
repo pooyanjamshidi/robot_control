@@ -84,6 +84,7 @@ class ControlInterface:
 
         self.battery_charge = -1
         self.battery_capacity = 1.2009
+        self.battery_voltage = 12
         self.charge_rate = 0
         self.is_charging = False
         self.is_battery_low = False
@@ -133,7 +134,7 @@ class ControlInterface:
         while not self.movebase_client.wait_for_server(rospy.Duration.from_sec(5)):
             rospy.loginfo("waiting for the action server")
 
-        rospy.loginfo("successfully connected to the action server")
+        rospy.loginfo("Successfully connected to the action server")
         return True
 
     def move_to_point(self, x, y):
@@ -156,10 +157,10 @@ class ControlInterface:
         state = self.movebase_client.get_state()
 
         if success and state == GoalStatus.SUCCEEDED:
-            rospy.loginfo("reached the destination")
+            rospy.loginfo("Reached the destination")
             return True
         else:
-            rospy.loginfo("could not reached the destination")
+            rospy.loginfo("Could not reached the destination")
             return False
 
     def connect_to_ig_action_server(self):
@@ -168,9 +169,9 @@ class ControlInterface:
         self.ig_client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
 
         while not self.ig_client.wait_for_server(rospy.Duration.from_sec(max_waiting_time)):
-            rospy.logwarn("waiting for the ig_action_server")
+            rospy.logwarn("Waiting for the ig_action_server")
 
-        rospy.loginfo("successfully connected to the ig_action_server")
+        rospy.loginfo("Successfully connected to the ig_action_server")
         return True
 
     def move_bot_with_ig(self, ig_file):
@@ -186,7 +187,7 @@ class ControlInterface:
                 rospy.loginfo("Successfully executed the instructions and reached the destination")
                 return True
             else:
-                rospy.loginfo("could not execute the instructions")
+                rospy.loginfo("Could not execute the instructions")
                 return False
 
     def move_bot_with_igcode(self, igcode):
@@ -201,12 +202,12 @@ class ControlInterface:
             rospy.loginfo("Successfully executed the instructions and reached the destination")
             return True
         else:
-            rospy.loginfo("could not execute the instructions")
+            rospy.loginfo("Could not execute the instructions")
             return False
 
     def send_instructions(self, igcode):
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
-        self.ig_client.send_goal(goal=goal, done_cb=self.done_cb)
+        self.ig_client.send_goal(goal=goal, done_cb=None, active_cb=None, feedback_cb=None)
 
     def set_bot_position(self, x, y, w):
 
@@ -317,28 +318,28 @@ class ControlInterface:
         return self.get_charge
 
     def active_cb(self):
-        rospy.loginfo("Plan is active!")
+        rospy.loginfo("The issued plan is active!")
 
     def done_cb(self, status, result):
         # TODO: check this callback to see whether we are getting the right status
-        pass
-        # if status == GoalStatus.SUCCEEDED:
-        #     rospy.loginfo("done_cb: Task succeeded!")
-        #     # emulating rainbow, will need to remove later
-        #     # subprocess.call("current-task-finished.sh 1", shell=True)
-        # else:
-        #     rospy.logwarn("done_cb: Unhandled Action response: {0}".format(status_translator(status)))
-        #     # subprocess.call("current-task-finished.sh 0", shell=True)
+        if status == GoalStatus.SUCCEEDED:
+            rospy.loginfo("done_cb: Task succeeded!")
+            # emulating rainbow, will need to remove later
+            # subprocess.call("current-task-finished.sh 1", shell=True)
+        else:
+            rospy.logwarn("done_cb: Unhandled Action response: {0}".format(status_translator(status)))
+            # subprocess.call("current-task-finished.sh 0", shell=True)
 
     def feedback_cb(self, feedback):
+        pass
         # first get the latest charge and then determine whether the bot should abort the task
-        if self.battery_charge < battery_low_threshold * self.battery_capacity:
-            # self.ig_client.cancel_goal()
-            self.is_battery_low = True
-            rospy.logwarn("Battery level is low and the goal has been cancelled to send the robot to charge station")
-        else:
-            self.is_battery_low = False
-            rospy.loginfo("Battery level is OK")
+        # if self.battery_charge < battery_low_threshold * self.battery_capacity:
+        #     # self.ig_client.cancel_goal()
+        #     self.is_battery_low = True
+        #     rospy.logwarn("Battery level is low and the goal has been cancelled to send the robot to charge station")
+        # else:
+        #     self.is_battery_low = False
+        #     rospy.loginfo("Battery level is OK")
 
     def place_obstacle(self, x, y):
         """similar to phase 1"""

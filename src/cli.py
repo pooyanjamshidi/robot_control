@@ -17,7 +17,8 @@ from bot_controller import BotController
 from constants import AdaptationLevel
 from ready_db import ReadyDB
 
-commands = ["place_obstacle", "remove_obstacle", "set_charge", "execute_task", "go_directly"]
+commands = ["place_obstacle", "remove_obstacle", "set_charge", "execute_task", "go_directly", "execute_task_reactive",
+            "execute_task_reactive_fancy"]
 
 rosnode = "cp1_node"
 launch_configs = {
@@ -78,6 +79,14 @@ def main():
     et_parser.add_argument('start', type=str, help='The starting waypoint')
     et_parser.add_argument('target', nargs='+', type=str, help='The target waypoints')
 
+    er_parser = argparse.ArgumentParser(prog=parser.prog + " execute_task_reactive")
+    er_parser.add_argument('start', type=str, help='The starting waypoint')
+    er_parser.add_argument('target', nargs='+', type=str, help='The target waypoints')
+
+    ef_parser = argparse.ArgumentParser(prog=parser.prog + " execute_task_reactive_fancy")
+    ef_parser.add_argument('start', type=str, help='The starting waypoint')
+    ef_parser.add_argument('target', nargs='+', type=str, help='The target waypoints')
+
     go_parser = argparse.ArgumentParser(prog=parser.prog + " go_directly")
     go_parser.add_argument('start', type=str, help='The starting waypoint')
     go_parser.add_argument('target', type=str, help='The target waypoint')
@@ -93,6 +102,28 @@ def main():
         rospy.sleep(10)
 
         task_finished, locs = bot.go_instructions_multiple_tasks_adaptive(pargs.start, pargs.target)
+        print("{0}/{1} tasks are successfully done".format(task_finished, len(pargs.target)))
+
+    if args.command == "execute_task_reactive":
+        pargs = er_parser.parse_args(extras)
+
+        # put the robot at the start position
+        start_coords = bot.map_server.waypoint_to_coords(pargs.start)
+        bot.gazebo.set_bot_position(start_coords['x'], start_coords['y'], 0)
+        rospy.sleep(10)
+
+        task_finished, locs = bot.go_instructions_multiple_tasks_reactive(pargs.start, pargs.target)
+        print("{0}/{1} tasks are successfully done".format(task_finished, len(pargs.target)))
+
+    if args.command == "execute_task_reactive_fancy":
+        pargs = ef_parser.parse_args(extras)
+
+        # put the robot at the start position
+        start_coords = bot.map_server.waypoint_to_coords(pargs.start)
+        bot.gazebo.set_bot_position(start_coords['x'], start_coords['y'], 0)
+        rospy.sleep(10)
+
+        task_finished, locs = bot.go_instructions_multiple_tasks_reactive_fancy(pargs.start, pargs.target)
         print("{0}/{1} tasks are successfully done".format(task_finished, len(pargs.target)))
 
     elif args.command == "go_directly":
