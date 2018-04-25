@@ -191,9 +191,11 @@ class BotController:
                          "dist_to_target": d})
 
             if success:
-                rospy.loginfo("A new task ({0}->{1}) has been accomplished".format(current_start, target))
+                rospy.loginfo("The task ({0}->{1}) has been accomplished".format(current_start, target))
                 start = target
                 number_of_tasks_accomplished += 1
+            else:
+                rospy.logwarn("The task ({0}->{1}) has been failed".format(current_start, target))
 
         return number_of_tasks_accomplished, locs
 

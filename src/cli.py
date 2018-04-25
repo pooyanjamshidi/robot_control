@@ -93,6 +93,7 @@ def main():
         rospy.sleep(10)
 
         task_finished, locs = bot.go_instructions_multiple_tasks_adaptive(pargs.start, pargs.target)
+        print("{0}/{1} tasks are successfully done".format(task_finished, len(pargs.target)))
 
     elif args.command == "go_directly":
         pargs = go_parser.parse_args(extras)
@@ -102,6 +103,8 @@ def main():
         bot.gazebo.set_bot_position(start_coords['x'], start_coords['y'], 0)
 
         res = bot.go_without_instructions(pargs.target)
+        if res:
+            print("Reached the target")
 
     elif args.command == "set_charge":
         pargs = sc_parser.parse_args(extras)
@@ -125,9 +128,9 @@ def main():
         rargs = ro_parser.parse_args(extras)
         res = bot.gazebo.remove_obstacle(rargs.obstacle_id, check=False)
         if res:
-            print ('Obstacle was removed successfully')
+            print('Obstacle was removed successfully')
         else:
-            print ('Obstacle was removed unsuccessfully')
+            print('Obstacle was removed unsuccessfully')
 
 
 if __name__ == '__main__':
