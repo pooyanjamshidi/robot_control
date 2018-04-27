@@ -15,7 +15,8 @@ RUN sudo apt-get install -y python-pip
 
 RUN sudo pip install catkin_pkg rospkg numpy psutil defusedxml flask-script
 
-RUN source /opt/ros/kinetic/setup.sh && \
+RUN . /opt/ros/kinetic/setup.sh && \
+    . devel/setup.bash && \
     catkin_make
 
 CMD ["/bin/bash"]
