@@ -190,10 +190,10 @@ class ControlInterface:
                 rospy.loginfo("Could not execute the instructions")
                 return False
 
-    def move_bot_with_igcode(self, igcode):
+    def move_bot_with_igcode(self, igcode, active_cb=None, done_cb=None):
 
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
-        self.ig_client.send_goal(goal=goal, done_cb=self.done_cb, active_cb=self.active_cb, feedback_cb=self.feedback_cb)
+        self.ig_client.send_goal(goal=goal, done_cb=done_cb, active_cb=active_cb, feedback_cb=self.feedback_cb)
         success = self.ig_client.wait_for_result(rospy.Duration.from_sec(max_waiting_time))
 
         state = self.ig_client.get_state()
@@ -205,9 +205,9 @@ class ControlInterface:
             rospy.loginfo("Could not execute the instructions")
             return False
 
-    def send_instructions(self, igcode):
+    def send_instructions(self, igcode, active_cb=None, done_cb=None):
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
-        self.ig_client.send_goal(goal=goal, done_cb=None, active_cb=None, feedback_cb=None)
+        self.ig_client.send_goal(goal=goal, done_cb=done_cb, active_cb=active_cb)
 
     def set_bot_position(self, x, y, w):
 
