@@ -6,8 +6,6 @@ COPY CMakeLists.txt src/cp1_controllers/
 COPY package.xml src/cp1_controllers/
 COPY requirements.txt src/cp1_controllers/
 
-RUN git clone https://github.com/cmu-mars/model-learner.git src/model-learner
-
 RUN . /opt/ros/kinetic/setup.sh
 RUN sudo chown -R $(whoami):$(whoami) .
 RUN sudo chown -R $(whoami):$(whoami) ../cp1/
