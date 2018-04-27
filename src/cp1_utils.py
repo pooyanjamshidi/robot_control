@@ -27,7 +27,9 @@ launch_configs = {
 launch_file_path = "~/catkin_ws/src/cp1_base/launch/"
 
 
-def launch_cp1_base(config):
+def launch_cp1_base(config=None):
+    if config is None:
+        config = 'default'
     launch_file = launch_configs[config]
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
     roslaunch.configure_logging(uuid=uuid)
