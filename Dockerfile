@@ -13,8 +13,9 @@ RUN sudo chown -R $(whoami):$(whoami) ../cp1/
 #RUN . /opt/ros/kinetic/setup.sh && \
 #    catkin_make
 
-RUN sudo apt-get install -y python-pip
-
 RUN sudo pip install catkin_pkg rospkg numpy psutil defusedxml flask-script
+
+RUN sudo apt-get install -y python3-pip
+RUN python3 -m pip install --upgrade src/cp1_controllers/
 
 CMD ["/bin/bash"]
