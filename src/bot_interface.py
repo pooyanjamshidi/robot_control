@@ -403,6 +403,7 @@ class ControlInterface:
             return False
 
 
+# for testing, will remove it at some pint!
 def main():
 
     global battery_charge
@@ -426,7 +427,3 @@ def main():
 
     ci.connect_to_ig_action_server()
     ci.move_bot_with_ig('../instructions/nav_test1.ig')
-
-
-if __name__ == '__main__':
-    main()

@@ -17,8 +17,6 @@ from bot_controller import BotController
 from constants import AdaptationLevel
 from ready_db import ReadyDB
 
-commands = ["place_obstacle", "remove_obstacle", "set_charge", "execute_task", "go_directly", "execute_task_reactive",
-            "execute_task_reactive_fancy"]
 
 rosnode = "cp1_node"
 launch_configs = {
