@@ -1,6 +1,6 @@
 FROM cmu-mars/cp1_base
 
-ADD src src/cp1_controllers/src
+ADD cp1controllers src/cp1_controllers/cp1controllers
 ADD cp1 ../cp1/
 COPY CMakeLists.txt src/cp1_controllers/
 COPY package.xml src/cp1_controllers/
