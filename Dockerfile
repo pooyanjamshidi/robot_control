@@ -5,6 +5,7 @@ ADD cp1 ../cp1/
 COPY CMakeLists.txt src/cp1_controllers/
 COPY package.xml src/cp1_controllers/
 COPY requirements.txt src/cp1_controllers/
+COPY setup.py src/cp1_controllers/
 
 RUN . /opt/ros/kinetic/setup.sh
 RUN sudo chown -R $(whoami):$(whoami) .
