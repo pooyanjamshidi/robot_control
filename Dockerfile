@@ -8,6 +8,7 @@ COPY requirements.txt src/cp1_controllers/
 
 RUN git clone https://github.com/cmu-mars/model-learner.git src/model-learner
 
+RUN . /opt/ros/kinetic/setup.sh
 RUN sudo chown -R $(whoami):$(whoami) .
 RUN sudo chown -R $(whoami):$(whoami) ../cp1/
 
@@ -16,7 +17,6 @@ RUN sudo apt-get install -y python-pip
 RUN sudo pip install catkin_pkg rospkg numpy psutil defusedxml flask-script
 
 RUN . /opt/ros/kinetic/setup.sh && \
-    . devel/setup.bash && \
     catkin_make
 
 CMD ["/bin/bash"]
