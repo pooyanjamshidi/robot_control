@@ -116,20 +116,20 @@ class BotController:
             self.gazebo.send_instructions(igcode=igcode, active_cb=active_cb, done_cb=done_cb)
             return True
 
-    def start(self, start, targets, active_cb=None, done_cb=None, mission_done_cb=None):
+    def start(self, start, targets, active_cb=None, done_cb=None, at_waypoint_cb=None, mission_done_cb=None):
         """this is an interface for the mission sequencer"""
         # TODO: test this shit
 
         if self.level == "c":
             p = Process(target=self.go_instructions_multiple_tasks_adaptive,
-                        args=(start, targets, active_cb, done_cb, mission_done_cb))
+                        args=(start, targets, active_cb, done_cb, at_waypoint_cb, mission_done_cb))
             p.start()
         else:
             p = Process(target=self.go_instructions_multiple_tasks_reactive,
-                        args=(start, targets, active_cb, done_cb, mission_done_cb))
+                        args=(start, targets, active_cb, done_cb, at_waypoint_cb, mission_done_cb))
             p.start()
 
-    def go_instructions_multiple_tasks_reactive(self, start, targets, active_cb=None, done_cb=None, mission_done_cb=None):
+    def go_instructions_multiple_tasks_reactive(self, start, targets, active_cb=None, done_cb=None, at_waypoint_cb=None, mission_done_cb=None):
         """the same version of go_instructions but for multiple tasks for cp1
 
         :param start:
@@ -159,6 +159,7 @@ class BotController:
                 rospy.loginfo("A new task ({0}->{1}) has been accomplished".format(current_start, target))
                 start = target
                 number_of_tasks_accomplished += 1
+                at_waypoint_cb(target)
 
             if self.gazebo.is_battery_low:
                 bot_state = self.gazebo.get_bot_state()
@@ -175,7 +176,7 @@ class BotController:
         mission_done_cb(number_of_tasks_accomplished, locs)
         return number_of_tasks_accomplished, locs
 
-    def go_instructions_multiple_tasks_reactive_fancy(self, start, targets, active_cb=None, done_cb=None, mission_done_cb=None):
+    def go_instructions_multiple_tasks_reactive_fancy(self, start, targets, active_cb=None, done_cb=None, at_waypoint_cb=None, mission_done_cb=None):
         """the same version of reactive but with configuration adaptation
 
         :param start:
@@ -205,6 +206,7 @@ class BotController:
                 rospy.loginfo("A new task ({0}->{1}) has been accomplished".format(current_start, target))
                 start = target
                 number_of_tasks_accomplished += 1
+                at_waypoint_cb(target)
 
             if self.gazebo.is_battery_low:
                 bot_state = self.gazebo.get_bot_state()
@@ -225,7 +227,7 @@ class BotController:
         mission_done_cb(number_of_tasks_accomplished, locs)
         return number_of_tasks_accomplished, locs
 
-    def go_instructions_multiple_tasks_adaptive(self, start, targets, active_cb=None, done_cb=None, mission_done_cb=None):
+    def go_instructions_multiple_tasks_adaptive(self, start, targets, active_cb=None, done_cb=None, at_waypoint_cb=None, mission_done_cb=None):
         """this is for baseline c where the adaptation will be taken care of with Rainbow"""
 
         number_of_tasks_accomplished = 0
@@ -256,6 +258,7 @@ class BotController:
                 rospy.loginfo("The task ({0}->{1}) has been accomplished".format(current_start, target))
                 start = target
                 number_of_tasks_accomplished += 1
+                at_waypoint_cb(target)
             else:
                 rospy.logwarn("The task ({0}->{1}) has been failed".format(current_start, target))
 
