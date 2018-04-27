@@ -12,11 +12,11 @@ RUN . /opt/ros/kinetic/setup.sh
 RUN sudo chown -R $(whoami):$(whoami) .
 RUN sudo chown -R $(whoami):$(whoami) ../cp1/
 
+RUN . /opt/ros/kinetic/setup.sh && \
+    catkin_make
+
 RUN sudo apt-get install -y python-pip
 
 RUN sudo pip install catkin_pkg rospkg numpy psutil defusedxml flask-script
-
-RUN . /opt/ros/kinetic/setup.sh && \
-    catkin_make
 
 CMD ["/bin/bash"]
