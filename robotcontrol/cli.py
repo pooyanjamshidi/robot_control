@@ -16,7 +16,7 @@ import roslaunch
 from bot_controller import BotController
 from constants import AdaptationLevel
 from ready_db import ReadyDB
-from cp1_utils import *
+from launch_utils import *
 
 commands = ["place_obstacle", "remove_obstacle", "set_charge", "execute_task", "go_directly", "execute_task_reactive",
             "execute_task_reactive_fancy"]

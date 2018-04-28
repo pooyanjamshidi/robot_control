@@ -3,9 +3,9 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='cp1_controllers',
+    name='robotcontrol',
     version='0.1.0',
-    description='Controllers for BRASS MARS project',
+    description='Robot controllers for BRASS MARS project',
     author='Pooyan Jamshidi',
     author_email='pooyan.jamshidi@gmail.com',
     url='https://github.com/pooyanjamshidi',

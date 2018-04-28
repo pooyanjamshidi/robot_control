@@ -401,29 +401,3 @@ class ControlInterface:
         except rospy.ServiceException as e:
             rospy.logerr("Could not place obstacle. Message {0}".format(e))
             return False
-
-
-# for testing, will remove it at some pint!
-def main():
-
-    global battery_charge
-    battery_charge = -1
-
-    rospy.init_node('navigation', anonymous=False)
-
-    ci = ControlInterface()
-    state = ci.get_bot_state()
-    print("Bot is located at ({0}, {1}), facing {2} and going with a speed of {3} m/s".format(state[0], state[1], state[2], state[3]))
-
-    ci.set_power_load(1)
-    ci.set_charge(1)
-    ci.set_charging(1)
-
-    # monitor_battery()
-    # ci.move_to_point(0, -1)
-    # ci.set_bot_position(0, 0, 0)
-
-    ci.read_conf()
-
-    ci.connect_to_ig_action_server()
-    ci.move_bot_with_ig('../instructions/nav_test1.ig')
