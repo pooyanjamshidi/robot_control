@@ -1,21 +1,12 @@
 #! /usr/bin/env python
 
 # general imports
-import argparse
 import psutil
-import math
 import os
-import time
-
-# import ros libraries
-from time import sleep
 
 import rospy
 from roslaunch import rlutil, parent
 import roslaunch
-from bot_controller import BotController
-from constants import AdaptationLevel
-from ready_db import ReadyDB
 
 
 rosnode = "cp1_node"
