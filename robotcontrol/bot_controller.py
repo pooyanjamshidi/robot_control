@@ -4,15 +4,16 @@
 import os
 import time
 import math
-from mapserver import MapServer
-from instructions_db import InstructionDB
-from bot_interface import ControlInterface
-from configuration_db import ConfigurationDB
-from battery_db import BatteryDB
 import rospy
 import re
-from constants import AdaptationLevel
 from multiprocessing import Process
+
+from robotcontrol.mapserver import MapServer
+from robotcontrol.instructions_db import InstructionDB
+from robotcontrol.bot_interface import ControlInterface
+from robotcontrol.configuration_db import ConfigurationDB
+from robotcontrol.battery_db import BatteryDB
+from robotcontrol.constants import AdaptationLevel
 
 
 map_file = os.path.expanduser("~/catkin_ws/src/cp1_base/maps/cp1_map.json")
