@@ -16,6 +16,15 @@ launch_configs = {
 launch_file_path = "~/catkin_ws/src/cp1_base/launch/"
 
 
+def add_to_queue(func):
+    def wrapper(q, *args, **kwargs):
+        result = func(*args, **kwargs)
+        q.put(result)
+        return result
+    return wrapper
+
+
+@add_to_queue
 def launch_cp1_base(config=None):
     if config is None:
         config = 'default'
