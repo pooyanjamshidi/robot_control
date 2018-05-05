@@ -160,7 +160,8 @@ class BotController:
                 rospy.loginfo("A new task ({0}->{1}) has been accomplished".format(current_start, target))
                 start = target
                 number_of_tasks_accomplished += 1
-                at_waypoint_cb(target)
+                if at_waypoint_cb is not None:
+                    at_waypoint_cb(target)
 
             if self.gazebo.is_battery_low:
                 bot_state = self.gazebo.get_bot_state()
@@ -174,7 +175,9 @@ class BotController:
                 self.undock()
                 start = charging_id
 
-        mission_done_cb(number_of_tasks_accomplished, locs)
+        if mission_done_cb is not None:
+            mission_done_cb(number_of_tasks_accomplished, locs)
+
         return number_of_tasks_accomplished, locs
 
     def go_instructions_multiple_tasks_reactive_fancy(self, start, targets, active_cb=None, done_cb=None, at_waypoint_cb=None, mission_done_cb=None):
@@ -207,7 +210,8 @@ class BotController:
                 rospy.loginfo("A new task ({0}->{1}) has been accomplished".format(current_start, target))
                 start = target
                 number_of_tasks_accomplished += 1
-                at_waypoint_cb(target)
+                if at_waypoint_cb is not None:
+                    at_waypoint_cb(target)
 
             if self.gazebo.is_battery_low:
                 bot_state = self.gazebo.get_bot_state()
@@ -225,7 +229,9 @@ class BotController:
                 self.undock()
                 start = charging_id
 
-        mission_done_cb(number_of_tasks_accomplished, locs)
+        if mission_done_cb is not None:
+            mission_done_cb(number_of_tasks_accomplished, locs)
+
         return number_of_tasks_accomplished, locs
 
     def go_instructions_multiple_tasks_adaptive(self, start, targets, active_cb=None, done_cb=None, at_waypoint_cb=None, mission_done_cb=None):
@@ -259,11 +265,14 @@ class BotController:
                 rospy.loginfo("The task ({0}->{1}) has been accomplished".format(current_start, target))
                 start = target
                 number_of_tasks_accomplished += 1
-                at_waypoint_cb(target)
+                if at_waypoint_cb is not None:
+                    at_waypoint_cb(target)
             else:
                 rospy.logwarn("The task ({0}->{1}) has been failed".format(current_start, target))
 
-        mission_done_cb(number_of_tasks_accomplished, locs)
+        if mission_done_cb is not None:
+            mission_done_cb(number_of_tasks_accomplished, locs)
+
         return number_of_tasks_accomplished, locs
 
     def wait_until_rainbow_is_done(self):
