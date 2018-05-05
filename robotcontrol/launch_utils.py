@@ -24,7 +24,6 @@ def add_to_queue(func):
     return wrapper
 
 
-@add_to_queue
 def launch_cp1_base(config=None):
     if config is None:
         config = 'default'
