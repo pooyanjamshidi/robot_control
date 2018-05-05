@@ -67,7 +67,7 @@ class MapServer:
         return self.stations
 
     def get_waypoint(self, waypoint_id):
-        return filter(lambda waypoint: waypoint["node-id"] == waypoint_id, self.waypoint_list)
+        return list(filter(lambda waypoint: waypoint["node-id"] == waypoint_id, self.waypoint_list))
 
     def get_waypoints(self):
         return self.waypoint_idx.keys()
