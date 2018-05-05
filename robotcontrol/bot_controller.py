@@ -127,10 +127,9 @@ class BotController:
                         args=(start, targets, active_cb, done_cb, at_waypoint_cb, mission_done_cb))
             p.start()
         else:
-            self.go_instructions_multiple_tasks_reactive(start, targets, active_cb, done_cb, at_waypoint_cb, mission_done_cb)
-            # p = Process(target=self.go_instructions_multiple_tasks_reactive,
-            #             args=(start, targets, active_cb, done_cb, at_waypoint_cb, mission_done_cb))
-            # p.start()
+            p = Process(target=self.go_instructions_multiple_tasks_reactive,
+                        args=(start, targets, active_cb, done_cb, at_waypoint_cb, mission_done_cb))
+            p.start()
 
     def go_instructions_multiple_tasks_reactive(self, start, targets, active_cb=None, done_cb=None, at_waypoint_cb=None, mission_done_cb=None):
         """the same version of go_instructions but for multiple tasks for cp1
