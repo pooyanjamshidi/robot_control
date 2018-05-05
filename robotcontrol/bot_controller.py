@@ -139,6 +139,8 @@ class BotController:
         :param targets:
         :return:
         """
+        rospy.loginfo("Reactive robot started the mission!")
+
         number_of_tasks_accomplished = 0
         locs = []
 
@@ -189,6 +191,9 @@ class BotController:
         :param targets:
         :return:
         """
+
+        rospy.loginfo("Reactive robot (fancy) started the mission!")
+
         number_of_tasks_accomplished = 0
         locs = []
 
@@ -238,6 +243,8 @@ class BotController:
 
     def go_instructions_multiple_tasks_adaptive(self, start, targets, active_cb=None, done_cb=None, at_waypoint_cb=None, mission_done_cb=None):
         """this is for baseline c where the adaptation will be taken care of with Rainbow"""
+
+        rospy.loginfo("Adaptive robot started the mission!")
 
         number_of_tasks_accomplished = 0
         locs = []
