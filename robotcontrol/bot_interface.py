@@ -132,7 +132,7 @@ class ControlInterface:
         self.movebase_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
 
         while not self.movebase_client.wait_for_server(rospy.Duration.from_sec(5)):
-            rospy.loginfo("waiting for the action server")
+            rospy.loginfo("Waiting for the navigation server")
 
         rospy.loginfo("Successfully connected to the action server")
         return True
@@ -258,10 +258,12 @@ class ControlInterface:
     def get_bot_state(self):
 
         try:
+            rospy.loginfo("A query to observe the current state of the robot has been issued")
             tp = self.get_model_state('mobile_base', '')
             quat = (tp.pose.orientation.x, tp.pose.orientation.y, tp.pose.orientation.z, tp.pose.orientation.w)
             (roll, pitch, yaw) = euler_from_quaternion(quat)
             v = math.sqrt(tp.twist.linear.x**2 + tp.twist.linear.y**2)
+            rospy.loginfo("The robot is at: x={0}, y={1}, yaw={2}, v={3}".format(tp.pose.position.x, tp.pose.position.y, yaw, v))
             return tp.pose.position.x, tp.pose.position.y, yaw, v
 
         except rospy.ServiceException as se:

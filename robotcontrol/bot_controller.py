@@ -121,7 +121,7 @@ class BotController:
         """this is an interface for the mission sequencer"""
         # TODO: test this shit
 
-        rospy.loginfo("starting the mission!")
+        rospy.loginfo("Starting the mission!")
 
         if self.level == "c":
             p = Process(target=self.go_instructions_multiple_tasks_adaptive,
