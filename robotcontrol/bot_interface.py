@@ -194,7 +194,8 @@ class ControlInterface:
     def move_bot_with_igcode(self, igcode, active_cb=None, done_cb=None):
 
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
-        self.ig_client.send_goal(goal=goal, done_cb=done_cb, active_cb=active_cb, feedback_cb=self.feedback_cb)
+        self.ig_client.send_goal(goal=goal, done_cb=done_cb, active_cb=active_cb)
+        rospy.loginfo("Instructions was sent to the ig_server")
         success = self.ig_client.wait_for_result(rospy.Duration.from_sec(max_waiting_time))
 
         state = self.ig_client.get_state()
@@ -208,6 +209,7 @@ class ControlInterface:
 
     def send_instructions(self, igcode, active_cb=None, done_cb=None):
 
+        rospy.loginfo("Received some instructions to execute")
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
         self.ig_client.send_goal(goal=goal, done_cb=done_cb, active_cb=active_cb)
 
