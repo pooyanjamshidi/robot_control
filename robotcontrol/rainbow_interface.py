@@ -51,7 +51,7 @@ class RainbowInterface:
                 rospy.logerr("Trying to start Rainbow when Rainbow is already running.")
             self.processStarted = True
 
-        if (self.target is None):
+        if self.target is None:
             return True
         rospy.loginfo("Starting Rainbow (DAS)...")
         command = Command([RAINBOW_PATH+"/brass.sh", "-w", RAINBOW_PATH, "-s", self.target, os.path.expanduser("~/rainbow-start.log")])
@@ -66,15 +66,14 @@ class RainbowInterface:
         """
         print ("Configuring rainbow for %s"%challenge_problem)
         self.target = self.getTarget(challenge_problem)
-        if (self.target is not None):
+        if self.target is not None:
             time.sleep(10)
             print("Starting %s/run-oracle.sh %s"%(RAINBOW_PATH,self.target))
             subprocess.Popen([RAINBOW_PATH+"/run-oracle.sh", "-h", "-w", RAINBOW_PATH, self.target], stdout=log)
             time.sleep(40)
 
-
     def stopRainbow(self):
         rospy.loginfo("Stopping Rainbow (DAS)...")
-        ret = subprocess.call ([RAINBOW_PATH+"/brass.sh","-q", "-w", RAINBOW_PATH, self.target])
+        ret = subprocess.call([RAINBOW_PATH+"/brass.sh", "-q", "-w", RAINBOW_PATH, self.target])
         with self.lock:
             self.processStarted = False
