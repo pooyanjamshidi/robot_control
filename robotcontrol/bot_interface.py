@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+"""robot lop-level controller"""
 import math
 import json
 from threading import Lock
@@ -46,17 +47,18 @@ obstacle = os.path.expanduser('~/catkin_ws/src/cp1_base/models/box')
 # Here we manage the world, bot, and control interface
 
 def status_translator(status):
-    if 0: print('')
-    elif status == GoalStatus.PENDING   : state='PENDING'
-    elif status == GoalStatus.ACTIVE    : state='ACTIVE'
-    elif status == GoalStatus.PREEMPTED : state='PREEMPTED'
-    elif status == GoalStatus.SUCCEEDED : state='SUCCEEDED'
-    elif status == GoalStatus.ABORTED   : state='ABORTED'
-    elif status == GoalStatus.REJECTED  : state='REJECTED'
-    elif status == GoalStatus.PREEMPTING: state='PREEMPTING'
-    elif status == GoalStatus.RECALLING : state='RECALLING'
-    elif status == GoalStatus.RECALLED  : state='RECALLED'
-    elif status == GoalStatus.LOST      : state='LOST'
+    if 0:
+        print('')
+    elif status == GoalStatus.PENDING   : state = 'PENDING'
+    elif status == GoalStatus.ACTIVE    : state = 'ACTIVE'
+    elif status == GoalStatus.PREEMPTED : state = 'PREEMPTED'
+    elif status == GoalStatus.SUCCEEDED : state = 'SUCCEEDED'
+    elif status == GoalStatus.ABORTED   : state = 'ABORTED'
+    elif status == GoalStatus.REJECTED  : state = 'REJECTED'
+    elif status == GoalStatus.PREEMPTING: state = 'PREEMPTING'
+    elif status == GoalStatus.RECALLING : state = 'RECALLING'
+    elif status == GoalStatus.RECALLED  : state = 'RECALLED'
+    elif status == GoalStatus.LOST      : state = 'LOST'
     return 'Status({} - {})'.format(status, state)
 
 
@@ -91,7 +93,6 @@ class ControlInterface:
 
         self.movebase_client = None
         self.ig_client = None
-        self.ig_server = None
 
         self.bot_conf = None
 
@@ -109,6 +110,7 @@ class ControlInterface:
         self.connect_to_gazebo(timeout=30)
 
     def connect_to_gazebo(self, timeout):
+
         try:
             rospy.wait_for_service('/gazebo/get_model_state', timeout=timeout)
         except rospy.ROSException as e:
@@ -131,7 +133,7 @@ class ControlInterface:
 
         self.movebase_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
 
-        while not self.movebase_client.wait_for_server(rospy.Duration.from_sec(5)):
+        while not self.movebase_client.wait_for_server(rospy.Duration.from_sec(max_waiting_time)):
             rospy.loginfo("Waiting for the navigation server")
 
         rospy.loginfo("Successfully connected to the action server")
@@ -165,7 +167,6 @@ class ControlInterface:
 
     def connect_to_ig_action_server(self):
 
-        # self.ig_server = actionlib.SimpleActionServer("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
         self.ig_client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
 
         while not self.ig_client.wait_for_server(rospy.Duration.from_sec(max_waiting_time)):
@@ -206,6 +207,7 @@ class ControlInterface:
             return False
 
     def send_instructions(self, igcode, active_cb=None, done_cb=None):
+
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
         self.ig_client.send_goal(goal=goal, done_cb=done_cb, active_cb=active_cb)
 
@@ -309,7 +311,6 @@ class ControlInterface:
             self.battery_previous_update = self.battery_charge
 
     def monitor_battery(self):
-        # rospy.init_node("battery_monitor_client")
         rospy.Subscriber("/mobile_base/commands/charge_level", Float64, self.get_charge)
         rospy.spin()
 

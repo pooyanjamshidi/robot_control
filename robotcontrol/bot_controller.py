@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-"""bot controller"""
+"""robot mission-level controller"""
 import os
 import time
 import math
@@ -55,7 +55,6 @@ class BotController:
     def go_without_instructions(self, target):
         """bot goes directly from start to the target using move base
 
-        :param start: start waypoint id
         :param target: target waypoint id
         :return:
         """
@@ -95,6 +94,7 @@ class BotController:
 
         # get the yaw (direction) where the robot is headed
         w = self.instruction_server.get_start_heading(start, target)
+
         if w == -1:
             rospy.logerr("No information for {0} to {1}".format(start, target))
             return False
@@ -119,7 +119,6 @@ class BotController:
 
     def start(self, start, targets, active_cb=None, done_cb=None, at_waypoint_cb=None, mission_done_cb=None):
         """this is an interface for the mission sequencer"""
-        # TODO: test this shit
 
         rospy.loginfo("Starting the mission!")
 
@@ -128,9 +127,10 @@ class BotController:
                         args=(start, targets, active_cb, done_cb, at_waypoint_cb, mission_done_cb))
             p.start()
         else:
-            p = Process(target=self.go_instructions_multiple_tasks_reactive,
-                        args=(start, targets, active_cb, done_cb, at_waypoint_cb, mission_done_cb))
-            p.start()
+            self.go_instructions_multiple_tasks_reactive(start, targets, active_cb, done_cb, at_waypoint_cb, mission_done_cb)
+            # p = Process(target=self.go_instructions_multiple_tasks_reactive,
+            #             args=(start, targets, active_cb, done_cb, at_waypoint_cb, mission_done_cb))
+            # p.start()
 
     def go_instructions_multiple_tasks_reactive(self, start, targets, active_cb=None, done_cb=None, at_waypoint_cb=None, mission_done_cb=None):
         """the same version of go_instructions but for multiple tasks for cp1
