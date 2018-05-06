@@ -6,6 +6,7 @@ import rospy
 import threading
 
 RAINBOW_PATH = os.path.expanduser('~/das/rainbow-brass')
+LD_PATH = os.path.expanduser('~/das/prism-4.3.1-linux64/lib')
 
 
 class Command(object):
@@ -65,11 +66,15 @@ class RainbowInterface:
 
         """
         print ("Configuring rainbow for %s"%challenge_problem)
+        os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + ":%s" % LD_PATH
+        print("LD_LIBRARY_PATH=%s" % os.environ["LD_LIBRARY_PATH"])
+
         self.target = self.getTarget(challenge_problem)
         if self.target is not None:
             time.sleep(10)
             print("Starting %s/run-oracle.sh %s"%(RAINBOW_PATH,self.target))
-            subprocess.Popen([RAINBOW_PATH+"/run-oracle.sh", "-h", "-w", RAINBOW_PATH, self.target], stdout=log)
+            subprocess.Popen([RAINBOW_PATH + "/run-oracle.sh", "-h", "-w", RAINBOW_PATH, self.target], stdout=log,
+                             env=os.environ)
             time.sleep(40)
 
     def stopRainbow(self):
