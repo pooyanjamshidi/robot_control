@@ -277,6 +277,7 @@ class ControlInterface:
     def get_current_configuration(self, current_or_historical):
         res = self.get_configuration_srv(current_or_historical)
         self.current_config = res.result
+        rospy.loginfo("New configuration id of the robot is: {0}".format(self.current_config))
         return self.current_config
 
     def set_current_configuration(self, config_id):
