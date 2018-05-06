@@ -109,7 +109,10 @@ class BotController:
         # get the instruction code, update the speed based on current configuration and execute it
         igcode = self.instruction_server.get_instructions(start, target)
         # update the speed to reflect the influence of configuration
+        rospy.loginfo(igcode)
         updated_igcode = self.update_speed(igcode=igcode)
+        rospy.loginfo("instructions are updated")
+        rospy.loginfo(updated_igcode)
         if wait:
             res = self.gazebo.move_bot_with_igcode(updated_igcode, active_cb=active_cb, done_cb=done_cb)
             return res
