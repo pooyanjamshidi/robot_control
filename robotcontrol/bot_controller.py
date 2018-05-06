@@ -7,6 +7,7 @@ import math
 import rospy
 import re
 from multiprocessing import Process
+from threading import Thread
 
 from robotcontrol.mapserver import MapServer
 from robotcontrol.instructions_db import InstructionDB
@@ -124,13 +125,13 @@ class BotController:
         rospy.loginfo("Starting the mission!")
 
         if self.level == "c":
-            p = Process(target=self.go_instructions_multiple_tasks_adaptive,
+            t = Thread(target=self.go_instructions_multiple_tasks_adaptive,
                         args=(start, targets, active_cb, done_cb, at_waypoint_cb, mission_done_cb))
-            p.start()
+            t.start()
         else:
-            p = Process(target=self.go_instructions_multiple_tasks_reactive,
+            t = Thread(target=self.go_instructions_multiple_tasks_reactive,
                         args=(start, targets, active_cb, done_cb, at_waypoint_cb, mission_done_cb))
-            p.start()
+            t.start()
 
     def go_instructions_multiple_tasks_reactive(self, start, targets, active_cb=None, done_cb=None, at_waypoint_cb=None, mission_done_cb=None):
         """the same version of go_instructions but for multiple tasks for cp1
