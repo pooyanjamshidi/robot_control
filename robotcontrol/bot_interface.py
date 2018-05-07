@@ -5,7 +5,6 @@ import math
 import json
 from threading import Lock
 import os
-import subprocess
 
 # third party imports
 import rospy
@@ -16,12 +15,8 @@ from geometry_msgs.msg import *
 from gazebo_msgs.msg import *
 from gazebo_msgs.srv import *
 import actionlib
-import dynamic_reconfigure.client
 from robotcontrol.transformations import euler_from_quaternion, quaternion_from_euler
 import ig_action_msgs.msg
-from ig_action_msgs.msg import InstructionGraphResult
-from mars_notifications.msg import UserNotification
-from kobuki_msgs.msg import MotorPower
 
 # importing battery services
 from brass_gazebo_battery.srv import *

@@ -156,9 +156,18 @@ class BotController:
             #  check robot distance to the target, if it is not then
             d = distance([x, y], [loc_target['x'], loc_target['y']])
             if d > distance_threshold and success:
-                rospy.logwarn("The robot is not close enough to the expected target, so we do not count this task done!")
+                rospy.logwarn(
+                    "The robot is not close enough to the expected target, so we do not count this task done!")
                 start = target
                 success = False
+            elif d < distance_threshold and not success:
+                rospy.logwarn(
+                    "Apparently the robot could accomplish the task but ig_server reported differently!")
+                start = target
+                success = True
+
+            if at_waypoint_cb is not None:
+                at_waypoint_cb(target)
 
             locs.append({"start": current_start, "target": target, "x": x, "y": y, "task_accomplished": success, "dist_to_target": d})
 
@@ -166,8 +175,8 @@ class BotController:
                 rospy.loginfo("A new task ({0}->{1}) has been accomplished".format(current_start, target))
                 start = target
                 number_of_tasks_accomplished += 1
-                if at_waypoint_cb is not None:
-                    at_waypoint_cb(target)
+            else:
+                rospy.logwarn("The task ({0}->{1}) has been failed".format(current_start, target))
 
             if self.gazebo.is_battery_low:
                 bot_state = self.gazebo.get_bot_state()
@@ -210,9 +219,18 @@ class BotController:
             #  check robot distance to the target, if it is not then
             d = distance([x, y], [loc_target['x'], loc_target['y']])
             if d > distance_threshold and success:
-                rospy.logwarn("The robot is not close enough to the expected target, so we do not count this task done!")
+                rospy.logwarn(
+                    "The robot is not close enough to the expected target, so we do not count this task done!")
                 start = target
                 success = False
+            elif d < distance_threshold and not success:
+                rospy.logwarn(
+                    "Apparently the robot could accomplish the task but ig_server reported differently!")
+                start = target
+                success = True
+
+            if at_waypoint_cb is not None:
+                at_waypoint_cb(target)
 
             locs.append({"start": current_start, "target": target, "x": x, "y": y, "task_accomplished": success, "dist_to_target": d})
 
@@ -220,8 +238,8 @@ class BotController:
                 rospy.loginfo("A new task ({0}->{1}) has been accomplished".format(current_start, target))
                 start = target
                 number_of_tasks_accomplished += 1
-                if at_waypoint_cb is not None:
-                    at_waypoint_cb(target)
+            else:
+                rospy.logwarn("The task ({0}->{1}) has been failed".format(current_start, target))
 
             if self.gazebo.is_battery_low:
                 bot_state = self.gazebo.get_bot_state()
@@ -270,6 +288,14 @@ class BotController:
                     "The robot is not close enough to the expected target, so we do not count this task done!")
                 start = target
                 success = False
+            elif d < distance_threshold and not success:
+                rospy.logwarn(
+                    "Apparently the robot could accomplish the task but ig_server reported differently!")
+                start = target
+                success = True
+
+            if at_waypoint_cb is not None:
+                at_waypoint_cb(target)
 
             locs.append({"start": current_start, "target": target, "x": x, "y": y, "task_accomplished": success,
                          "dist_to_target": d})
@@ -278,8 +304,6 @@ class BotController:
                 rospy.loginfo("The task ({0}->{1}) has been accomplished".format(current_start, target))
                 start = target
                 number_of_tasks_accomplished += 1
-                if at_waypoint_cb is not None:
-                    at_waypoint_cb(target)
             else:
                 rospy.logwarn("The task ({0}->{1}) has been failed".format(current_start, target))
 
