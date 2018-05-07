@@ -1,5 +1,5 @@
 import json
-from constants import AdaptationLevel
+from robotcontrol.constants import AdaptationLevel
 
 
 class ReadyDB:

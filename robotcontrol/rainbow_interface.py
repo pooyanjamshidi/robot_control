@@ -6,8 +6,6 @@ import rospy
 import threading
 
 RAINBOW_PATH = os.path.expanduser('~/das/rainbow-brass')
-LD_PATH = os.path.expanduser('~/das/prism-4.3.1-linux64/lib')
-
 
 class Command(object):
     def __init__(self, cmd):
@@ -30,8 +28,8 @@ class Command(object):
         return self.process.returncode
 
 
-# Class to manage interaction with Rainbow
 class RainbowInterface:
+	# Class to manage interaction with Rainbow
 
     def __init__(self):
         self.processStarted = False
@@ -52,7 +50,7 @@ class RainbowInterface:
                 rospy.logerr("Trying to start Rainbow when Rainbow is already running.")
             self.processStarted = True
 
-        if self.target is None:
+        if (self.target is None):
             return True
         rospy.loginfo("Starting Rainbow (DAS)...")
         command = Command([RAINBOW_PATH+"/brass.sh", "-w", RAINBOW_PATH, "-s", self.target, os.path.expanduser("~/rainbow-start.log")])
@@ -63,22 +61,21 @@ class RainbowInterface:
     def launchRainbow(self, challenge_problem, log):
         """
         Starts Rainbow process. Needs to (a) start in background, (b) wait some time until it is up
-
         """
-        print ("Configuring rainbow for %s"%challenge_problem)
-        os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + ":%s" % LD_PATH
-        print("LD_LIBRARY_PATH=%s" % os.environ["LD_LIBRARY_PATH"])
 
+        print ("Configuring rainbow for %s"%challenge_problem)
+        os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + ":" + os.path.expanduser("~/das/prism-4.3.1-linux64/lib")
+        print ("LD_LIBRARY_PATH=%s" %os.environ["LD_LIBRARY_PATH"])
         self.target = self.getTarget(challenge_problem)
-        if self.target is not None:
+        if (self.target is not None):
             time.sleep(10)
             print("Starting %s/run-oracle.sh %s"%(RAINBOW_PATH,self.target))
-            subprocess.Popen([RAINBOW_PATH + "/run-oracle.sh", "-h", "-w", RAINBOW_PATH, self.target], stdout=log,
-                             env=os.environ)
+            subprocess.Popen([RAINBOW_PATH+"/run-oracle.sh", "-h", "-w", RAINBOW_PATH, self.target], stdout=log)
             time.sleep(40)
+
 
     def stopRainbow(self):
         rospy.loginfo("Stopping Rainbow (DAS)...")
-        ret = subprocess.call([RAINBOW_PATH+"/brass.sh", "-q", "-w", RAINBOW_PATH, self.target])
+        ret = subprocess.call ([RAINBOW_PATH+"/brass.sh","-q", "-w", RAINBOW_PATH, self.target])
         with self.lock:
             self.processStarted = False

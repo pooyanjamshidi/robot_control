@@ -160,7 +160,7 @@ class BotController:
                     "The robot is not close enough to the expected target, so we do not count this task done!")
                 start = target
                 success = False
-            elif d < distance_threshold and not success:
+            elif d <= distance_threshold and not success:
                 rospy.logwarn(
                     "Apparently the robot could accomplish the task but ig_server reported differently!")
                 start = target
@@ -223,7 +223,7 @@ class BotController:
                     "The robot is not close enough to the expected target, so we do not count this task done!")
                 start = target
                 success = False
-            elif d < distance_threshold and not success:
+            elif d <= distance_threshold and not success:
                 rospy.logwarn(
                     "Apparently the robot could accomplish the task but ig_server reported differently!")
                 start = target
@@ -288,7 +288,7 @@ class BotController:
                     "The robot is not close enough to the expected target, so we do not count this task done!")
                 start = target
                 success = False
-            elif d < distance_threshold and not success:
+            elif d <= distance_threshold and not success:
                 rospy.logwarn(
                     "Apparently the robot could accomplish the task but ig_server reported differently!")
                 start = target
