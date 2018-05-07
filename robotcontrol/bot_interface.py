@@ -114,7 +114,7 @@ class ControlInterface:
         try:
             rospy.wait_for_service('/gazebo/get_model_state', timeout=timeout)
         except rospy.ROSException as e:
-            raise rospy.logerr("Could not connect to gazebo", e)
+            raise rospy.logwarn("Could not connect to gazebo", e)
 
     def read_conf(self):
 
@@ -134,7 +134,7 @@ class ControlInterface:
         self.movebase_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
 
         while not self.movebase_client.wait_for_server(rospy.Duration.from_sec(max_waiting_time)):
-            rospy.loginfo("Waiting for the navigation server")
+            rospy.logwarn("Waiting for the navigation server")
 
         rospy.loginfo("Successfully connected to the action server")
         return True
@@ -162,7 +162,7 @@ class ControlInterface:
             rospy.loginfo("Reached the destination")
             return True
         else:
-            rospy.loginfo("Could not reached the destination")
+            rospy.logwarn("Could not reached the destination")
             return False
 
     def connect_to_ig_action_server(self):
@@ -188,7 +188,7 @@ class ControlInterface:
                 rospy.loginfo("Successfully executed the instructions and reached the destination")
                 return True
             else:
-                rospy.loginfo("Could not execute the instructions")
+                rospy.logwarn("Could not execute the instructions")
                 return False
 
     def move_bot_with_igcode(self, igcode, active_cb=None, done_cb=None):
@@ -204,7 +204,7 @@ class ControlInterface:
             rospy.loginfo("Successfully executed the instructions and reached the destination")
             return True
         else:
-            rospy.loginfo("Could not execute the instructions")
+            rospy.logwarn("Could not execute the instructions")
             return False
 
     def send_instructions(self, igcode, active_cb=None, done_cb=None):
