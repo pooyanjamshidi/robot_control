@@ -24,7 +24,7 @@ world_file = os.path.expanduser("~/catkin_ws/src/cp1_base/worlds/p2-cp1-1.world"
 
 battery_name = "brass_battery"
 sleep_interval = 5
-distance_threshold = 1
+distance_threshold = 2
 
 # for Rainbow integration
 current_target_waypoint = os.path.expanduser("~/cp1/current-target-waypoint")
