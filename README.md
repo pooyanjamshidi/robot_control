@@ -27,8 +27,8 @@ After running `roscore` service and launching the robot `roslaunch launch/cp1-ba
 python cli.py execute_task_reactive l2 l3 l4 l5
 python cli.py execute_task l2 l3 l4 l5
 python cli.py place_obstacle -19.08 11.08
-python src/cli.py set_charge 32560.0
-python src/cli.py go_directly l1 l2
-python src/cli.py remove_obstacle Obstacle_0
+python cli.py set_charge 32560.0
+python cli.py go_directly l1 l2
+python cli.py remove_obstacle Obstacle_0
 ```
 
