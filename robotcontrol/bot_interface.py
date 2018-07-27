@@ -27,7 +27,7 @@ from brass_gazebo_config_manager.srv import *
 ros_node = '/battery_monitor_client'
 model_name = '/battery_demo_model'
 map_name = 'map'
-max_waiting_time = 100
+max_waiting_time = 1200
 
 # the threshold below which the bot will go to the charging station
 battery_low_threshold = 0.10
